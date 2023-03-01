@@ -1,0 +1,6 @@
+[submodule "JUCE"]
+	path = JUCE
+	url = https://github.com/juce-framework/JUCE.git
+[submodule "ort-builder"]
+	path = ort-builder
+	url = https://github.com/olilarkin/ort-builder.git

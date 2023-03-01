@@ -1,0 +1,1 @@
+- Build plugin that wins the contest
