@@ -34,18 +34,6 @@ void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
 
     auto numSamples = buffer.getNumSamples();
     auto bufferPtr = buffer.getArrayOfWritePointers();
-    auto subBlockSize = LSTMModelInference::kMaxBufferSize;
-
-    if (numSamples % subBlockSize == 0) /* divisible by frame size */
-    {
-        auto numBlocks = numSamples / subBlockSize;
-        for (int block = 0; block < numBlocks; block++)
-        {
-            float* frameInput = &bufferPtr[0][block * subBlockSize];
-            float* frameOutput = &bufferPtr[0][block * subBlockSize];
-            _inference.ProcessBlock(frameInput, frameOutput, subBlockSize);
-        }
-    }
 
     // Copy to other output channels
     for (int i = 1; i < getTotalNumOutputChannels(); i++)
