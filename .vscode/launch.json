@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "VST3",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/Applications/REAPER.app",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "$PATH:${command:cmake.launchTargetDirectory}"
+                }
+            ],
+            "MIMode": "lldb",
+            "logging": {
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": "AU",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/Applications/Logic Pro X.app",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "$PATH:${command:cmake.launchTargetDirectory}"
+                }
+            ],
+            "MIMode": "lldb",
+            "logging": {
+                "moduleLoad": false
+            }
+        }
+    ]
+}

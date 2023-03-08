@@ -27,8 +27,8 @@ add_subdirectory(JUCE)
 juce_add_plugin(${PROJECT_NAME}
     COMPANY_NAME "CalGoheenMattRice"
     BUNDLE_ID com.cgmr.text2sample
-    IS_SYNTH FALSE
-    NEEDS_MIDI_INPUT FALSE
+    IS_SYNTH TRUE
+    NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
@@ -41,7 +41,7 @@ juce_add_plugin(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS 
+file(GLOB SourceFiles CONFIGURE_DEPENDS 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp" 
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
 )
@@ -74,6 +74,8 @@ set(JUCE_DEPENDENCIES
 
 set(ONNX_RUNTIME "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/libs/macos-arm64_x86_64/onnxruntime.a")
 
+add_subdirectory(resample)
+
 target_compile_definitions(${PROJECT_NAME}
     PUBLIC
         JUCE_WEB_BROWSER=0
@@ -86,6 +88,7 @@ target_link_libraries(${PROJECT_NAME}
         Assets
         ${JUCE_DEPENDENCIES}
         ${ONNX_RUNTIME}
+        r8b
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

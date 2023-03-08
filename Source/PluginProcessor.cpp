@@ -2,57 +2,57 @@
 #include "PluginEditor.h"
 
 Text2SampleAudioProcessor::Text2SampleAudioProcessor()
-  : AudioProcessor(BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true)
-                                    .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+  : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
     _parameters(*this, nullptr, "PARAMS", createParameterLayout())
 {
+    const int c4 = 60;
+    for (int i = 0; i < numSounds; i++)
+        _synth.addSound(new Sound(c4 + i));
+
+    for (int i = 0; i < numVoices; i++)
+        _synth.addVoice(new Voice());
 }
 
 Text2SampleAudioProcessor::~Text2SampleAudioProcessor()
 {
 }
 
-
 bool Text2SampleAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-
     return true;
 }
 
-void Text2SampleAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void Text2SampleAudioProcessor::prepareToPlay(double sampleRate, int)
 {
+    // Unused functionality but the Synthesiser class requires a real sample rate value
+    _synth.setCurrentPlaybackSampleRate(sampleRate);
+
+    // Sample rates are actually handled by the Sound class
+    for (int i = 0; i < _synth.getNumSounds(); i++)
+        if (auto s = dynamic_cast<Sound*>(_synth.getSound(i).get()))
+            s->setSampleRate(sampleRate);
 }
 
-void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
 
-    auto numSamples = buffer.getNumSamples();
-    auto bufferPtr = buffer.getArrayOfWritePointers();
-
-    // Copy to other output channels
-    for (int i = 1; i < getTotalNumOutputChannels(); i++)
-        buffer.copyFrom(i, 0, buffer.getReadPointer(0), numSamples);
-
-    // Process Gain
-    float gain = _parameters.getRawParameterValue("Gain")->load();
-    buffer.applyGain(gain);
+    buffer.clear();
+    _synth.renderNextBlock(buffer, midi, 0, buffer.getNumSamples());
 }
 
 void Text2SampleAudioProcessor::releaseResources()
 {
 }
 
-void Text2SampleAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void Text2SampleAudioProcessor::getStateInformation (juce::MemoryBlock&)
 {
 }
 
-void Text2SampleAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void Text2SampleAudioProcessor::setStateInformation (const void*, int)
 {
 }
 
@@ -64,6 +64,24 @@ bool Text2SampleAudioProcessor::hasEditor() const
 juce::AudioProcessorEditor* Text2SampleAudioProcessor::createEditor()
 {
     return new Text2SampleAudioProcessorEditor (*this);
+}
+
+EditorState* Text2SampleAudioProcessor::getEditorState()
+{
+    return &_editorState;
+}
+
+void Text2SampleAudioProcessor::loadSample(int soundIndex, const juce::File& file)
+{
+    jassert(juce::isPositiveAndBelow(soundIndex, _synth.getNumSounds()));
+
+    auto [data, fs] = Utils::readWavFile(file);
+    if (auto sound = dynamic_cast<Sound*>(_synth.getSound(soundIndex).get()))
+    {
+        suspendProcessing(true);
+        sound->setSampleData(std::move(data), fs);
+        suspendProcessing(false);
+    }
 }
 
 const juce::String Text2SampleAudioProcessor::getName() const
@@ -143,5 +161,3 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new Text2SampleAudioProcessor();
 }
-
-#include "model.ort.c"

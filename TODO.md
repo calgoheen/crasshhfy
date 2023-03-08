@@ -1,1 +1,2 @@
-- Build plugin that wins the contest
+Plugin:
+- Lagrange interpolation for changing pitch output
