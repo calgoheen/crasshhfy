@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "Sampler.h"
 #include "Utilities.h"
+#include "CrashModelInference.h"
 
 struct EditorState
 {
@@ -30,7 +31,7 @@ public:
     EditorState* getEditorState();
 
     void loadSample(int soundIndex, const juce::File& file);
-
+    void renderCRASHSample();
     const juce::String getName() const override;
     bool acceptsMidi() const override;
     bool producesMidi() const override;
@@ -49,6 +50,6 @@ private:
     juce::Synthesiser _synth;
 
     EditorState _editorState;
-
+    CrashModelInference modelInference;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Text2SampleAudioProcessor)
 };
