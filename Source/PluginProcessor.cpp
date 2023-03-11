@@ -1,6 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-
+#include "model.ort.c"
 
 Text2SampleAudioProcessor::Text2SampleAudioProcessor()
   : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
@@ -170,4 +170,3 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new Text2SampleAudioProcessor();
 }
-#include "model.ort.c"
