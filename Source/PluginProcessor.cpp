@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "model.ort.c"
 
 Text2SampleAudioProcessor::Text2SampleAudioProcessor()
   : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
@@ -82,6 +83,14 @@ void Text2SampleAudioProcessor::loadSample(int soundIndex, const juce::File& fil
         sound->setSample(std::move(data), fs);
         suspendProcessing(false);
     }
+
+}
+
+void Text2SampleAudioProcessor::renderCRASHSample()
+{
+    float output[21000];
+    modelInference.process(output);
+    Utils::writeWavFile("~/Desktop/output.wav", output, 1, 21000);
 }
 
 const juce::String Text2SampleAudioProcessor::getName() const

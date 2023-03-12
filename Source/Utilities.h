@@ -41,6 +41,25 @@ struct Utils
         return { std::move(data), reader->sampleRate };
     }
 
+    static void writeWavFile(const juce::String& file, float* x, int numChannels, int numSamples)
+    {
+        juce::File f{ file };
+        f.deleteFile();
+        f.create();
+        jassert(f.hasFileExtension(".wav"));
+        auto buffer = juce::AudioBuffer<float>(&x, numChannels, numSamples);
+
+        juce::WavAudioFormat format;
+        std::unique_ptr<AudioFormatWriter> writer;
+        writer.reset (format.createWriterFor (new FileOutputStream (file),
+                                              44100.0,
+                                              numChannels,
+                                              24,
+                                              {},
+                                              0));
+        if (writer != nullptr)
+            writer->writeFromAudioSampleBuffer (buffer, 0, numSamples);
+    }
     static void applyFade(float* data, int startSample, int numSamples, bool fadeIn = true)
     {
         if (fadeIn)
