@@ -33,7 +33,16 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
     };
 	addAndMakeVisible(_loadButton);
 
-    setSize(400, 300);
+
+    // CRASH button
+    _crashButton.setButtonText("Load CRASH Sample");
+    _crashButton.onClick = [this]
+    {
+        _processor.renderCRASHSample();
+    };
+    addAndMakeVisible(_crashButton);
+
+    setSize(400, 400);
 }
 
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
@@ -53,4 +62,5 @@ void Text2SampleAudioProcessorEditor::resized()
 	_noteLabel.setBounds(bounds.removeFromTop(30));
 	_noteSlider.setBounds(bounds.removeFromTop(100).withSizeKeepingCentre(120, 60));
 	_loadButton.setBounds(bounds.removeFromTop(50));
+    _crashButton.setBounds(bounds.removeFromTop(50));
 }
