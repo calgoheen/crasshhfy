@@ -176,6 +176,7 @@ void Voice::stopNote(float, bool allowTailOff)
     }
     else
     {
+        // If the voice stops while the ADSR is active, then it was stolen and will be reused immediately
         if (_adsr.isActive())
         {
             // Fill fifo with tapered output from current note, if part of the sample is still available.
@@ -205,6 +206,15 @@ void Voice::stopNote(float, bool allowTailOff)
                 }
             }
         }
+        else
+        {
+            // Empty the fifo if the voice is not going to be reused
+            while(_fifo.getNumAvailableToRead(0) > 0)
+            {
+                _fifo.read(0);
+                _fifo.read(1);
+            }
+        }
 
         _adsr.reset();
         clearCurrentNote();
@@ -217,52 +227,40 @@ void Voice::renderNextBlock(juce::AudioBuffer<float>& buffer, int startSample, i
     if (_sound == nullptr)
         return;
 
-    // Still have to read from the fifos if the sample is empty
-    if (_sound->isEmpty())
+    // Synth is stereo only
+    jassert(buffer.getNumChannels() == 2);
+    auto outL = buffer.getWritePointer(0, startSample);
+    auto outR = buffer.getWritePointer(1, startSample);
+
+    // Read from fifos if anything is available
+    int numSamplesFifo = juce::jmin(numSamples, _fifo.getNumAvailableToRead(0));
+    for (int i = 0; i < numSamplesFifo; i++)
     {
-        jassert(buffer.getNumChannels() == 2);
-        auto outL = buffer.getWritePointer(0);
-        auto outR = buffer.getWritePointer(1);
-
-        int endSample = startSample + juce::jmin(numSamples, _fifo.getNumAvailableToRead(0));
-        for (int i = startSample; i < endSample; i++)
-        {
-            outL[i] += _fifo.read(0);
-            outR[i] += _fifo.read(1);
-        }
-
-        return;
+        outL[i] += _fifo.read(0);
+        outR[i] += _fifo.read(1);
     }
+
+    if (_sound->isEmpty())
+        return;
     
     auto& sample = _sound->getSample();
-    jassert(buffer.getNumChannels() == 2);
     jassert(sample.getNumChannels() == 1 || sample.getNumChannels() == 2);
 
-    auto outL = buffer.getWritePointer(0);
-    auto outR = buffer.getWritePointer(1);
-
-    int endSample = startSample + numSamples;
-    for (int i = startSample; i < endSample; i++)
+    for (int i = 0; i < numSamples; i++)
     {
-        auto [l, r] = getNextSample();
         bool endOfSample = int(_currentIdx) >= sample.getNumSamples() - 1;
-
-        // Add fifo output if data from previous voice is available
-        if (_fifo.getNumAvailableToRead(0) > 0)
-        {
-            l += _fifo.read(0);
-            r += _fifo.read(1);
-        }
-
-        // Write to output buffer
-        outL[i] += l;
-        outR[i] += r;
 
         if (endOfSample || !_adsr.isActive())
         {
             stopNote(0.0f, false);
             break;
         }
+
+        // Write to output buffer
+        auto [l, r] = getNextSample();
+
+        outL[i] += l;
+        outR[i] += r;
     }
 }
 
