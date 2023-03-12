@@ -36,6 +36,8 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
 
     void loadSample(int soundIndex, Sample::Ptr sample);
+    void saveSample(int soundIndex, const juce::File& file);
+    
     void loadSampleFromFile(int soundIndex, const juce::File& file);
     void generateSample(int soundIndex);
 

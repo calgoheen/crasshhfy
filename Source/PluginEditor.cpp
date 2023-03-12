@@ -13,6 +13,39 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 	_noteLabel.setFont(juce::Font{ 14.0f });
 	addAndMakeVisible(_noteLabel);
 
+    // CRASH button
+    _crashButton.setButtonText("Generate Sample");
+    _crashButton.onClick = [this]
+    {
+		_crashButton.setEnabled(false);
+        juce::Thread::launch([this] { 
+			_processor.generateSample(_noteSlider.getValue()); 
+			_crashButton.setEnabled(true);
+		});
+    };
+    addAndMakeVisible(_crashButton);
+
+	// Save sample to file
+	_saveButton.setButtonText("Save Sample");
+	_saveButton.onClick = [this]
+	{
+        auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
+        auto defaultPath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+
+        _chooser = std::make_unique<juce::FileChooser>("Save wav file", defaultPath, "*.wav");
+        
+        _chooser->launchAsync(flags, [this](const juce::FileChooser& chooser) {
+            auto f = chooser.getResult();
+            
+            if (f == juce::File())
+                return;
+            
+            auto idx = int(_noteSlider.getValue());
+			_processor.saveSample(idx, f);
+        });
+	};
+	addAndMakeVisible(_saveButton);
+
 	// Load sample from file
 	_loadButton.setButtonText("Load Sample");
 	_loadButton.onClick = [this] 
@@ -33,18 +66,6 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
     };
 	addAndMakeVisible(_loadButton);
 
-    // CRASH button
-    _crashButton.setButtonText("Generate Sample");
-    _crashButton.onClick = [this]
-    {
-		_crashButton.setEnabled(false);
-        juce::Thread::launch([this] { 
-			_processor.generateSample(_noteSlider.getValue()); 
-			_crashButton.setEnabled(true);
-		});
-    };
-    addAndMakeVisible(_crashButton);
-
     setSize(400, 400);
 }
 
@@ -64,6 +85,7 @@ void Text2SampleAudioProcessorEditor::resized()
 
 	_noteLabel.setBounds(bounds.removeFromTop(30));
 	_noteSlider.setBounds(bounds.removeFromTop(100).withSizeKeepingCentre(120, 60));
-	_loadButton.setBounds(bounds.removeFromTop(50));
     _crashButton.setBounds(bounds.removeFromTop(50));
+	_saveButton.setBounds(bounds.removeFromTop(50));
+	_loadButton.setBounds(bounds.removeFromTop(50));
 }

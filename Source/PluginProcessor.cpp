@@ -76,6 +76,19 @@ void Text2SampleAudioProcessor::loadSample(int soundIndex, Sample::Ptr sample)
         sound->setSample(sample);
 }
 
+void Text2SampleAudioProcessor::saveSample(int soundIndex, const juce::File& file)
+{
+    jassert(juce::isPositiveAndBelow(soundIndex, _synth.getNumSounds()));
+
+    if (auto sound = dynamic_cast<Sound*>(_synth.getSound(soundIndex).get()))
+    {
+        auto sample = sound->getSample();
+
+        if (sample != nullptr)
+            Utils::writeWavFile(sample->data, sample->sampleRate, file);
+    }
+}
+
 void Text2SampleAudioProcessor::loadSampleFromFile(int soundIndex, const juce::File& file)
 {
     auto [data, fs] = Utils::readWavFile(file);

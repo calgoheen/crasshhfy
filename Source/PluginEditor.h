@@ -42,8 +42,10 @@ private:
 
     NoteSlider _noteSlider;
     juce::Label _noteLabel;
-    juce::TextButton _loadButton;
+	
     juce::TextButton _crashButton;
+	juce::TextButton _saveButton;
+	juce::TextButton _loadButton;
 
     std::unique_ptr<juce::FileChooser> _chooser;
 
