@@ -16,7 +16,7 @@ double Sound::getSampleRate() const
     return _sampleRate;
 }
 
-void Sound::setSampleData(juce::AudioBuffer<float>&& data, double sourceFs)
+void Sound::setSample(juce::AudioBuffer<float>&& data, double sourceFs)
 {
     jassert(juce::isPositiveAndBelow(data.getNumChannels(), maxNumChannels));
 
@@ -25,20 +25,26 @@ void Sound::setSampleData(juce::AudioBuffer<float>&& data, double sourceFs)
     updateCurrentSample();
 }
 
-void Sound::setFadeLength(double lengthInSeconds)
-{
-    _fadeLength = lengthInSeconds;
-    updateCurrentSample();
-}
-
-const juce::AudioBuffer<float>& Sound::getCurrentData() const
+const juce::AudioBuffer<float>& Sound::getSample() const
 {
     return _currentData;
+}
+
+void Sound::clearSample() 
+{
+    _sourceData = juce::AudioBuffer<float>();
+    _currentData = juce::AudioBuffer<float>();
 }
 
 bool Sound::isEmpty() const
 {
     return _currentData.getNumSamples() == 0;
+}
+
+void Sound::setFadeLength(double lengthInSeconds)
+{
+    _fadeLength = lengthInSeconds;
+    updateCurrentSample();
 }
 
 void Sound::setPitch(float pitch)
@@ -74,6 +80,9 @@ bool Sound::appliesToChannel(int)
 void Sound::updateCurrentSample()
 {
     if (!(_sampleRate > 0.0 && _sourceSampleRate > 0.0))
+        return;
+
+    if (_sourceData.getNumSamples() == 0)
         return;
 
     _currentData = r8b::resample(_sourceData, _sourceSampleRate, _sampleRate);
@@ -170,28 +179,29 @@ void Voice::stopNote(float, bool allowTailOff)
         if (_adsr.isActive())
         {
             // Fill fifo with tapered output from current note, if part of the sample is still available.
-            auto& sample = _sound->getCurrentData();
+            auto& sample = _sound->getSample();
             auto numSamplesRemaining = sample.getNumSamples() - 1 - int(_currentIdx);
             auto numSamplesScaled = int(numSamplesRemaining / _pitchRatio);
             auto length = juce::jmin(numSamplesScaled, _numFifoSamples);
 
             if (length > 0)
             {
-                // Clear fifo output if any is remaining.
-                // But you could write it in to another fifo and then add it back in if you wanted it to be extra smooth.
-                while(_fifo.getNumAvailableToRead(0) > 0)
-                {
-                    _fifo.read(0);
-                    _fifo.read(1);
-                }
-
                 for (int i = 0; i < length; i++)
                 {
                     auto [l, r] = getNextSample();
                     auto g = float(length - i) / float(length);
+                    l *= g;
+                    r *= g;
 
-                    _fifo.write(0, l * g);
-                    _fifo.write(1, r * g);
+                    // Adds any existing fifo data back in (this probably won't happen very often)
+                    if (_fifo.getNumAvailableToRead(0) > i)
+                    {
+                        l += _fifo.read(0);
+                        r += _fifo.read(1);
+                    }
+
+                    _fifo.write(0, l);
+                    _fifo.write(1, r);
                 }
             }
         }
@@ -224,7 +234,7 @@ void Voice::renderNextBlock(juce::AudioBuffer<float>& buffer, int startSample, i
         return;
     }
     
-    auto& sample = _sound->getCurrentData();
+    auto& sample = _sound->getSample();
     jassert(buffer.getNumChannels() == 2);
     jassert(sample.getNumChannels() == 1 || sample.getNumChannels() == 2);
 
@@ -261,7 +271,7 @@ Voice::StereoSample Voice::readFromSample(float fractionalIndex) const
     // The voice must be active to call this function.
     jassert(_sound != nullptr);
 
-    auto& sample = _sound->getCurrentData();
+    auto& sample = _sound->getSample();
     auto idx0 = int(fractionalIndex);
     auto idx1 = idx0 + 1;
 

@@ -79,7 +79,7 @@ void Text2SampleAudioProcessor::loadSample(int soundIndex, const juce::File& fil
     if (auto sound = dynamic_cast<Sound*>(_synth.getSound(soundIndex).get()))
     {
         suspendProcessing(true);
-        sound->setSampleData(std::move(data), fs);
+        sound->setSample(std::move(data), fs);
         suspendProcessing(false);
     }
 }

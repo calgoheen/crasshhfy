@@ -14,12 +14,13 @@ public:
     void setSampleRate(double newRate);
     double getSampleRate() const;
 
-    void setSampleData(juce::AudioBuffer<float>&& data, double sourceFs);
-    void setFadeLength(double lengthInSeconds);
-    const juce::AudioBuffer<float>& getCurrentData() const;
+    void setSample(juce::AudioBuffer<float>&& data, double sourceFs);
+    const juce::AudioBuffer<float>& getSample() const;
+    void clearSample();
     bool isEmpty() const;
+    void setFadeLength(double lengthInSeconds);
 
-    void setPitch(float pitch);
+    void setPitch(float pitchInSemitones);
     double getPitch() const;
 
     void setEnvelope(const juce::ADSR::Parameters& params);
