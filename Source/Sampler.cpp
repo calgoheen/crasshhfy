@@ -16,29 +16,38 @@ double Sound::getSampleRate() const
     return _sampleRate;
 }
 
-void Sound::setSample(juce::AudioBuffer<float>&& data, double sourceFs)
+void Sound::setSample(Sample::Ptr sample)
 {
-    jassert(juce::isPositiveAndBelow(data.getNumChannels(), maxNumChannels));
+    jassert(juce::isPositiveAndNotGreaterThan(sample->data.getNumChannels(), maxNumChannels));
 
-    _sourceData = std::move(data);
-    _sourceSampleRate = sourceFs;
+    _source = sample;
     updateCurrentSample();
 }
 
-const juce::AudioBuffer<float>& Sound::getSample() const
+Sample::Ptr Sound::getSample() const
+{   
+    // Might return nullptr
+    return _current;
+}
+
+const juce::AudioBuffer<float>& Sound::getSampleData() const
 {
-    return _currentData;
+    // This function should only be called when a sample is loaded
+    jassert(!isEmpty());
+
+    return _current->data;
 }
 
 void Sound::clearSample() 
 {
-    _sourceData = juce::AudioBuffer<float>();
-    _currentData = juce::AudioBuffer<float>();
+    _prev = _current;
+    _current.reset();
+    _source.reset();
 }
 
 bool Sound::isEmpty() const
 {
-    return _currentData.getNumSamples() == 0;
+    return _current.get() == nullptr;
 }
 
 void Sound::setFadeLength(double lengthInSeconds)
@@ -79,23 +88,30 @@ bool Sound::appliesToChannel(int)
 
 void Sound::updateCurrentSample()
 {
-    if (!(_sampleRate > 0.0 && _sourceSampleRate > 0.0))
+    if (_source == nullptr)
+        return;
+    
+    if (!(_sampleRate > 0.0 && _source->sampleRate > 0.0))
         return;
 
-    if (_sourceData.getNumSamples() == 0)
+    if (_source->data.getNumSamples() == 0)
         return;
 
-    _currentData = r8b::resample(_sourceData, _sourceSampleRate, _sampleRate);
-    auto numSamples = _currentData.getNumSamples();
+    auto resampled = r8b::resample(_source->data, _source->sampleRate, _sampleRate);
+    auto numSamples = resampled.getNumSamples();
 
     // Apply fade
     auto fadeLengthSamples = juce::jmin(int(_fadeLength * _sampleRate), numSamples / 2);
-    auto ptr = _currentData.getArrayOfWritePointers();
-    for (int j = 0; j < _currentData.getNumChannels(); j++)
+    auto ptr = resampled.getArrayOfWritePointers();
+    for (int j = 0; j < resampled.getNumChannels(); j++)
     {
         Utils::applyFade(ptr[j], 0, fadeLengthSamples, true);
         Utils::applyFade(ptr[j], numSamples - fadeLengthSamples, fadeLengthSamples, false);
     }
+
+    Sample::Ptr next{ new Sample(std::move(resampled), _sampleRate) };
+    _prev = _current;
+    _current = next;
 }
 
 /*template <int k>
@@ -177,10 +193,10 @@ void Voice::stopNote(float, bool allowTailOff)
     else
     {
         // If the voice stops while the ADSR is active, then it was stolen and will be reused immediately
-        if (_adsr.isActive())
+        if (_adsr.isActive() && !_sound->isEmpty())
         {
             // Fill fifo with tapered output from current note, if part of the sample is still available.
-            auto& sample = _sound->getSample();
+            auto& sample = _sound->getSampleData();
             auto numSamplesRemaining = sample.getNumSamples() - 1 - int(_currentIdx);
             auto numSamplesScaled = int(numSamplesRemaining / _pitchRatio);
             auto length = juce::jmin(numSamplesScaled, _numFifoSamples);
@@ -243,7 +259,7 @@ void Voice::renderNextBlock(juce::AudioBuffer<float>& buffer, int startSample, i
     if (_sound->isEmpty())
         return;
     
-    auto& sample = _sound->getSample();
+    auto& sample = _sound->getSampleData();
     jassert(sample.getNumChannels() == 1 || sample.getNumChannels() == 2);
 
     for (int i = 0; i < numSamples; i++)
@@ -264,23 +280,19 @@ void Voice::renderNextBlock(juce::AudioBuffer<float>& buffer, int startSample, i
     }
 }
 
-Voice::StereoSample Voice::readFromSample(float fractionalIndex) const
+Voice::StereoSample Voice::readFromSample(const juce::AudioBuffer<float>& data, float fractionalIndex)
 {
-    // The voice must be active to call this function.
-    jassert(_sound != nullptr);
-
-    auto& sample = _sound->getSample();
     auto idx0 = int(fractionalIndex);
     auto idx1 = idx0 + 1;
 
     // Sample index must be in range
-    jassert(idx1 < sample.getNumSamples());
+    jassert(idx1 < data.getNumSamples());
 
     auto g1 = fractionalIndex - float(idx0);
     auto g0 = 1.0f - g1;
 
-    auto inL = sample.getReadPointer(0);
-    auto inR = sample.getNumChannels() > 1 ? sample.getReadPointer(1) : nullptr;
+    auto inL = data.getReadPointer(0);
+    auto inR = data.getNumChannels() > 1 ? data.getReadPointer(1) : nullptr;
 
     auto l = g0 * inL[idx0] + g1 * inL[idx1];
     auto r = inR == nullptr ? l : g0 * inR[idx0] + g1 * inR[idx1];
@@ -290,9 +302,11 @@ Voice::StereoSample Voice::readFromSample(float fractionalIndex) const
 
 Voice::StereoSample Voice::getNextSample()
 {
+    jassert(_sound != nullptr && !_sound->isEmpty());
+
     // Get current sample output and increment index & ADSR
     auto g = _adsr.getNextSample();
-    auto [l, r] = readFromSample(float(_currentIdx));
+    auto [l, r] = readFromSample(_sound->getSampleData(), float(_currentIdx));
     _currentIdx += _pitchRatio;
 
     return { l * g, r * g };

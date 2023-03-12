@@ -5,8 +5,14 @@
 #include "Utilities.h"
 #include "CrashModelInference.h"
 
-struct EditorState
+struct Limiter
 {
+    Limiter(juce::AudioBuffer<float>& data)
+    {
+        for (int i = 0; i < data.getNumSamples(); i++)
+            for (int j = 0; j < data.getNumChannels(); j++)
+                data.setSample(j, i, juce::jlimit(-1.0f, 1.0f, data.getSample(j, i)));
+    }
 };
 
 class Text2SampleAudioProcessor : public juce::AudioProcessor
@@ -28,10 +34,11 @@ public:
 
     bool hasEditor() const override;
     juce::AudioProcessorEditor* createEditor() override;
-    EditorState* getEditorState();
 
-    void loadSample(int soundIndex, const juce::File& file);
-    void renderCRASHSample();
+    void loadSample(int soundIndex, Sample::Ptr sample);
+    void loadSampleFromFile(int soundIndex, const juce::File& file);
+    void generateSample(int soundIndex);
+
     const juce::String getName() const override;
     bool acceptsMidi() const override;
     bool producesMidi() const override;
@@ -44,12 +51,13 @@ public:
     void changeProgramName(int, const juce::String&) override;
 
 private:
+    Sample::Ptr renderCRASHSample();
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     juce::AudioProcessorValueTreeState _parameters;
     juce::Synthesiser _synth;
 
-    EditorState _editorState;
     CrashModelInference modelInference;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Text2SampleAudioProcessor)
 };

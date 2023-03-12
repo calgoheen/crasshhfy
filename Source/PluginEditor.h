@@ -14,7 +14,6 @@ public:
 
 private:
     Text2SampleAudioProcessor& _processor;
-    EditorState* _state;
 
     class NoteSlider : public juce::Slider
     {

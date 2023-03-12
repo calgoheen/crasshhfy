@@ -17,8 +17,9 @@ LICENSE: MIT
 class CrashModelInference
 {
 public:
-  //  static constexpr int kMaxBufferSize = 128;
   static constexpr int outputSize = 21000;
+  static constexpr int numChannels = 1;
+  static constexpr double sampleRate = 44.1e3;
 
   CrashModelInference()
   {

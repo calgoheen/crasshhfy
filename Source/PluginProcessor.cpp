@@ -1,6 +1,5 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "model.ort.c"
 
 Text2SampleAudioProcessor::Text2SampleAudioProcessor()
   : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
@@ -43,6 +42,8 @@ void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
 
     buffer.clear();
     _synth.renderNextBlock(buffer, midi, 0, buffer.getNumSamples());
+
+    Limiter limit{ buffer };
 }
 
 void Text2SampleAudioProcessor::releaseResources()
@@ -67,30 +68,24 @@ juce::AudioProcessorEditor* Text2SampleAudioProcessor::createEditor()
     return new Text2SampleAudioProcessorEditor (*this);
 }
 
-EditorState* Text2SampleAudioProcessor::getEditorState()
-{
-    return &_editorState;
-}
-
-void Text2SampleAudioProcessor::loadSample(int soundIndex, const juce::File& file)
+void Text2SampleAudioProcessor::loadSample(int soundIndex, Sample::Ptr sample)
 {
     jassert(juce::isPositiveAndBelow(soundIndex, _synth.getNumSounds()));
 
-    auto [data, fs] = Utils::readWavFile(file);
     if (auto sound = dynamic_cast<Sound*>(_synth.getSound(soundIndex).get()))
-    {
-        suspendProcessing(true);
-        sound->setSample(std::move(data), fs);
-        suspendProcessing(false);
-    }
-
+        sound->setSample(sample);
 }
 
-void Text2SampleAudioProcessor::renderCRASHSample()
+void Text2SampleAudioProcessor::loadSampleFromFile(int soundIndex, const juce::File& file)
 {
-    float output[21000];
-    modelInference.process(output);
-    Utils::writeWavFile("~/Desktop/output.wav", output, 1, 21000);
+    auto [data, fs] = Utils::readWavFile(file);
+    loadSample(soundIndex, new Sample{ std::move(data), fs });
+}
+
+void Text2SampleAudioProcessor::generateSample(int soundIndex)
+{
+    auto sample = renderCRASHSample();
+    loadSample(soundIndex, sample);
 }
 
 const juce::String Text2SampleAudioProcessor::getName() const
@@ -164,6 +159,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout Text2SampleAudioProcessor::c
                                                                      d.defaultValue));
 
     return { params.begin(), params.end() };
+}
+
+Sample::Ptr Text2SampleAudioProcessor::renderCRASHSample()
+{
+    juce::AudioBuffer<float> data;
+    data.setSize(CrashModelInference::numChannels, CrashModelInference::outputSize);
+    modelInference.process(data.getWritePointer(0));
+
+    return new Sample{ std::move(data), CrashModelInference::sampleRate };
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

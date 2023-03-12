@@ -46,7 +46,11 @@ file(GLOB SourceFiles CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
 )
 
-target_sources(${PROJECT_NAME} PRIVATE ${SourceFiles})
+target_sources(${PROJECT_NAME} 
+    PRIVATE 
+        ${SourceFiles} 
+        "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model/model.ort.c"
+)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "" FILES ${SourceFiles})
 
@@ -96,8 +100,8 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model
+    "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model"
 )
 
 juce_generate_juce_header(${PROJECT_NAME})

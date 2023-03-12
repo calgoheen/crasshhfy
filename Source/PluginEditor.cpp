@@ -2,7 +2,7 @@
 #include "PluginEditor.h"
 
 Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudioProcessor& p)
-    : juce::AudioProcessorEditor(&p), _processor(p), _state(p.getEditorState())
+    : juce::AudioProcessorEditor(&p), _processor(p)
 {
 	// Midi note slider
 	addAndMakeVisible(_noteSlider);
@@ -13,7 +13,7 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 	_noteLabel.setFont(juce::Font{ 14.0f });
 	addAndMakeVisible(_noteLabel);
 
-	// Button
+	// Load sample from file
 	_loadButton.setButtonText("Load Sample");
 	_loadButton.onClick = [this] 
 	{
@@ -28,17 +28,20 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
                 return;
             
 			auto idx = int(_noteSlider.getValue());
-			_processor.loadSample(idx, f);
+			_processor.loadSampleFromFile(idx, f);
         });
     };
 	addAndMakeVisible(_loadButton);
 
-
     // CRASH button
-    _crashButton.setButtonText("Load CRASH Sample");
+    _crashButton.setButtonText("Generate Sample");
     _crashButton.onClick = [this]
     {
-        _processor.renderCRASHSample();
+		_crashButton.setEnabled(false);
+        juce::Thread::launch([this] { 
+			_processor.generateSample(_noteSlider.getValue()); 
+			_crashButton.setEnabled(true);
+		});
     };
     addAndMakeVisible(_crashButton);
 

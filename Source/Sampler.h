@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Fifo.h"
+#include "Sample.h"
 
 class Sound : public juce::SynthesiserSound
 {
@@ -14,8 +15,9 @@ public:
     void setSampleRate(double newRate);
     double getSampleRate() const;
 
-    void setSample(juce::AudioBuffer<float>&& data, double sourceFs);
-    const juce::AudioBuffer<float>& getSample() const;
+    void setSample(Sample::Ptr sample);
+    Sample::Ptr getSample() const;
+    const juce::AudioBuffer<float>& getSampleData() const;
     void clearSample();
     bool isEmpty() const;
     void setFadeLength(double lengthInSeconds);
@@ -39,8 +41,7 @@ private:
     double _pitchSemitones{ 0.0f };
     juce::ADSR::Parameters _envelope{ 0.002f, 0.1f, 1.0f, 1.0f };
 
-    juce::AudioBuffer<float> _sourceData;
-    juce::AudioBuffer<float> _currentData;
+    Sample::Ptr _source, _current, _prev;
 
     double _fadeLength{ 3e-3 };
 
@@ -65,7 +66,7 @@ public:
 
 private:
     typedef std::array<float, 2> StereoSample;
-    StereoSample readFromSample(float fractionalIndex) const;
+    static StereoSample readFromSample(const juce::AudioBuffer<float>& data, float fractionalIndex);
     StereoSample getNextSample();
     
     juce::ADSR _adsr;
