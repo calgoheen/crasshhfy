@@ -2,8 +2,9 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "Components.h"
 
-class Text2SampleAudioProcessorEditor  : public juce::AudioProcessorEditor
+class Text2SampleAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer
 {
 public:
     Text2SampleAudioProcessorEditor (Text2SampleAudioProcessor&);
@@ -14,6 +15,8 @@ public:
 
 private:
     Text2SampleAudioProcessor& _processor;
+
+	void timerCallback() override;
 
     class NoteSlider : public juce::Slider
     {
@@ -40,12 +43,15 @@ private:
 		};
     };
 
+	static constexpr int _midiUpdateTimerLength{ 30 };
+
     NoteSlider _noteSlider;
-    juce::Label _noteLabel;
 	
     juce::TextButton _crashButton;
 	juce::TextButton _saveButton;
 	juce::TextButton _loadButton;
+
+	std::unique_ptr<SampleKeyboard> _keyboard;
 
     std::unique_ptr<juce::FileChooser> _chooser;
 

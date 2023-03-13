@@ -20,6 +20,7 @@ class Text2SampleAudioProcessor : public juce::AudioProcessor
 public:
     const int numSounds = 12;
     const int numVoices = 8;
+    const int baseMidiNote = 60;
 
     Text2SampleAudioProcessor();
     ~Text2SampleAudioProcessor() override;
@@ -34,6 +35,7 @@ public:
 
     bool hasEditor() const override;
     juce::AudioProcessorEditor* createEditor() override;
+    const std::vector<bool>& getCurrentlyPlayingSounds() const;
 
     void loadSample(int soundIndex, Sample::Ptr sample);
     void saveSample(int soundIndex, const juce::File& file);
@@ -57,7 +59,11 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     juce::AudioProcessorValueTreeState _parameters;
+
     juce::Synthesiser _synth;
+    std::vector<Sound*> _sounds;
+    std::vector<Voice*> _voices;
+    std::vector<bool> _currentlyPlayingSounds;
 
     CrashModelInference modelInference;
 

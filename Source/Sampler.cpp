@@ -2,6 +2,11 @@
 #include <resample.h>
 #include "Utilities.h"
 
+int Sound::getMidiNote() const
+{
+    return _midiNote;
+}
+
 void Sound::setSampleRate(double newRate)
 {
     if (newRate != _sampleRate)
@@ -176,24 +181,31 @@ void Voice::startNote(int, float, juce::SynthesiserSound* sound, int)
 {
     _sound = reinterpret_cast<Sound*>(sound);
 
-    _adsr.setSampleRate(_sound->getSampleRate());
-    _adsr.setParameters(_sound->getEnvelope());
-    _adsr.noteOn();
+    _noteIsOn = true;
 
-    _pitchRatio = std::pow(2.0, _sound->getPitch() / 12.0);
-    _currentIdx = 0.0;
+    if (!_sound->isEmpty())
+    {
+        _adsr.setSampleRate(_sound->getSampleRate());
+        _adsr.setParameters(_sound->getEnvelope());
+        _adsr.noteOn();
+
+        _pitchRatio = std::pow(2.0, _sound->getPitch() / 12.0);
+        _currentIdx = 0.0;
+    }
 }
 
 void Voice::stopNote(float, bool allowTailOff)
 {
     if (allowTailOff)
     {
+        // Note off message received
+        _noteIsOn = false;
         _adsr.noteOff();
     }
     else
     {
         // If the voice stops while the ADSR is active, then it was stolen and will be reused immediately
-        if (_adsr.isActive() && !_sound->isEmpty())
+        if (_adsr.isActive())
         {
             // Fill fifo with tapered output from current note, if part of the sample is still available.
             auto& sample = _sound->getSampleData();
@@ -236,6 +248,11 @@ void Voice::stopNote(float, bool allowTailOff)
         clearCurrentNote();
         _sound = nullptr;
     }
+}
+
+bool Voice::isNoteOn() const
+{
+    return _noteIsOn;
 }
 
 void Voice::renderNextBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples)

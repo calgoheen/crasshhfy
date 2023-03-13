@@ -7,12 +7,6 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 	// Midi note slider
 	addAndMakeVisible(_noteSlider);
 
-	// Slider label
-	_noteLabel.setText("Note Index", juce::dontSendNotification);
-	_noteLabel.setJustificationType(juce::Justification::centred);
-	_noteLabel.setFont(juce::Font{ 14.0f });
-	addAndMakeVisible(_noteLabel);
-
     // CRASH button
     _crashButton.setButtonText("Generate Sample");
     _crashButton.onClick = [this]
@@ -20,7 +14,7 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 		_crashButton.setEnabled(false);
         juce::Thread::launch([this] { 
 			_processor.generateSample(_noteSlider.getValue()); 
-			_crashButton.setEnabled(true);
+			juce::MessageManager::callAsync([this] { _crashButton.setEnabled(true); });
 		});
     };
     addAndMakeVisible(_crashButton);
@@ -66,7 +60,12 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
     };
 	addAndMakeVisible(_loadButton);
 
-    setSize(400, 400);
+	// On-screen keyboard
+	_keyboard.reset(new SampleKeyboard(p.baseMidiNote, p.numSounds));
+	addAndMakeVisible(*_keyboard);
+	startTimer(_midiUpdateTimerLength);
+
+    setSize(600, 400);
 }
 
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
@@ -81,11 +80,19 @@ void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
 
 void Text2SampleAudioProcessorEditor::resized()
 {
-	auto bounds = getLocalBounds().reduced(30);
+	auto bounds = getLocalBounds().reduced(40);
 
-	_noteLabel.setBounds(bounds.removeFromTop(30));
 	_noteSlider.setBounds(bounds.removeFromTop(100).withSizeKeepingCentre(120, 60));
-    _crashButton.setBounds(bounds.removeFromTop(50));
-	_saveButton.setBounds(bounds.removeFromTop(50));
-	_loadButton.setBounds(bounds.removeFromTop(50));
+    _crashButton.setBounds(bounds.removeFromTop(40));
+	_saveButton.setBounds(bounds.removeFromTop(40));
+	_loadButton.setBounds(bounds.removeFromTop(40));
+
+	_keyboard->setBounds(bounds);
+}
+
+void Text2SampleAudioProcessorEditor::timerCallback()
+{
+	auto& noteStates = _processor.getCurrentlyPlayingSounds();
+	for (int i = 0; i < noteStates.size(); i++)
+		_keyboard->setNoteOn(i, noteStates[i]);
 }

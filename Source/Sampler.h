@@ -12,6 +12,8 @@ public:
     Sound(int midiNote) : _midiNote(midiNote) {}
     ~Sound() override = default;
 
+    int getMidiNote() const;
+
     void setSampleRate(double newRate);
     double getSampleRate() const;
 
@@ -58,6 +60,7 @@ public:
 
     void startNote(int, float velocity, juce::SynthesiserSound* sound, int) override;
     void stopNote(float velocity, bool allowTailOff) override;
+    bool isNoteOn() const;
 
     void renderNextBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override;
 
@@ -70,6 +73,7 @@ private:
     StereoSample getNextSample();
     
     juce::ADSR _adsr;
+    bool _noteIsOn{ false };
 
     const Sound* _sound{ nullptr };
     double _pitchRatio{ 1.0f };

@@ -5,12 +5,22 @@ Text2SampleAudioProcessor::Text2SampleAudioProcessor()
   : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
     _parameters(*this, nullptr, "PARAMS", createParameterLayout())
 {
-    const int c4 = 60;
     for (int i = 0; i < numSounds; i++)
-        _synth.addSound(new Sound(c4 + i));
+    {
+        auto sound = new Sound(baseMidiNote + i);
+        _sounds.push_back(sound);
+        _synth.addSound(sound);
+    }
 
     for (int i = 0; i < numVoices; i++)
-        _synth.addVoice(new Voice());
+    {
+        auto voice = new Voice();
+        _voices.push_back(voice);
+        _synth.addVoice(voice);
+    }
+
+    _currentlyPlayingSounds.resize(numSounds);
+    std::fill(_currentlyPlayingSounds.begin(), _currentlyPlayingSounds.end(), false);
 }
 
 Text2SampleAudioProcessor::~Text2SampleAudioProcessor()
@@ -44,6 +54,18 @@ void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     _synth.renderNextBlock(buffer, midi, 0, buffer.getNumSamples());
 
     Limiter limit{ buffer };
+
+    for (auto voice : _voices)
+    {
+        auto noteNum = voice->getCurrentlyPlayingNote();
+        if (noteNum >= 0)
+        {
+            auto idx = noteNum - baseMidiNote;
+            auto noteIsOn = voice->isNoteOn();
+
+            _currentlyPlayingSounds[idx] = noteIsOn;
+        }
+    }
 }
 
 void Text2SampleAudioProcessor::releaseResources()
@@ -66,6 +88,11 @@ bool Text2SampleAudioProcessor::hasEditor() const
 juce::AudioProcessorEditor* Text2SampleAudioProcessor::createEditor()
 {
     return new Text2SampleAudioProcessorEditor (*this);
+}
+
+const std::vector<bool>& Text2SampleAudioProcessor::getCurrentlyPlayingSounds() const
+{
+    return _currentlyPlayingSounds;
 }
 
 void Text2SampleAudioProcessor::loadSample(int soundIndex, Sample::Ptr sample)
@@ -108,7 +135,7 @@ const juce::String Text2SampleAudioProcessor::getName() const
 
 bool Text2SampleAudioProcessor::acceptsMidi() const
 {
-    return false;
+    return true;
 }
 
 bool Text2SampleAudioProcessor::producesMidi() const

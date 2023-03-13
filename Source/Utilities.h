@@ -29,6 +29,10 @@ struct Utils
 
         juce::WavAudioFormat format;
         auto reader = std::unique_ptr<juce::AudioFormatReader>(format.createReaderFor(new juce::FileInputStream(file), true));
+
+        if (reader == nullptr)
+            return { {}, 0.0 };
+
         auto numChannels = int(reader->numChannels);
         auto numSamples = int(reader->lengthInSamples);
 
@@ -60,6 +64,7 @@ struct Utils
         if (writer != nullptr)
             writer->writeFromAudioSampleBuffer(data, 0, data.getNumSamples());
     }
+    
     static void applyFade(float* data, int startSample, int numSamples, bool fadeIn = true)
     {
         if (fadeIn)
