@@ -37,7 +37,7 @@ public:
     mInputNames = GetInputNames();
     mOutputNames = GetOutputNames();
 
-    // override the -1
+    // Fix the input/output shapes so that they are (1, outputSize)
     mInputShapes[0] = {1, outputSize};
     mOutputShapes[0] = {1, outputSize};
 
@@ -45,15 +45,6 @@ public:
     mYScratch.resize(outputSize);
     mNoise.resize(outputSize);
     mSig.resize(nbSteps);
-    for (size_t i = 0; i < outputSize; i++)
-      mNoise[i] = d(mersenne_engine);
-
-    mXScratch = mNoise;
-
-    auto [s, m] = create_schedules();
-    mSig = s;
-    mMean = m;
-    std::fill(mYScratch.begin(), mYScratch.end(), 0.0f);
 
     mInputTensors.push_back(Ort::Value::CreateTensor<float>(info, mXScratch.data(), mXScratch.size(), mInputShapes[0].data(), mInputShapes[0].size()));
     mInputTensors.push_back(Ort::Value::CreateTensor<double>(info, sigVal.data(), sigVal.size(), mInputShapes[1].data(), mInputShapes[1].size()));
@@ -71,30 +62,43 @@ public:
 private:
   void RunInference()
   {
+    // Initialize variables
+    auto [s, m] = create_schedules();
+    mSig = s;
+    mMean = m;
+    std::fill(mYScratch.begin(), mYScratch.end(), 0.0f);
+    for (size_t i = 0; i < outputSize; i++)
+      mNoise[i] = d(mersenne_engine);
+    mXScratch = mNoise;
     const char *inputNamesCstrs[] = {mInputNames[0].c_str(), mInputNames[1].c_str()};
     const char *outputNamesCstrs[] = {mOutputNames[0].c_str()};
+
+    // Begin diffusion
     for (size_t n = nbSteps - 1; n > 0; n--)
     {
-      float scale = mMean[n] / mMean[n - 1] * powf(mSig[n - 1], 2.0f) / mSig[n] - mMean[n - 1] / mMean[n] * mSig[n];
       sigVal = {static_cast<double>(mSig[n])};
       mSession->Run(mRunOptions, inputNamesCstrs, mInputTensors.data(), mInputTensors.size(), outputNamesCstrs, mOutputTensors.data(), mOutputTensors.size());
 
+      // Create gaussian noise based on noise schedule
       for (size_t i = 0; i < outputSize; i++)
       {
         float newNoise = d(mersenne_engine);
         mNoise[i] =
             mSig[n - 1] * powf(1.0f - powf(mSig[n - 1] * mMean[n] / (mSig[n] * mMean[n - 1]), 2.0f), 0.5f) * newNoise;
-
       }
+      float scale = mMean[n] / mMean[n - 1] * powf(mSig[n - 1], 2.0f) / mSig[n] - mMean[n - 1] / mMean[n] * mSig[n];
+      // Next input is current input + scaled output + new noise
       for (size_t i = 0; i < outputSize; i++)
-        mXScratch[i] = mNoise[i] +  mMean[n - 1] / mMean[n] * mXScratch[i] + scale * mYScratch[i];
+        mXScratch[i] = mMean[n - 1] / mMean[n] * mXScratch[i] + scale * mYScratch[i] + mNoise[i];
     }
+
+    // Final run, output is subtraction of previous output and scaled final output
     std::vector<float> diffuseOut = mXScratch;
     sigVal = {static_cast<double>(mSig[0])};
+    float scale = mSig[0];
     mSession->Run(mRunOptions, inputNamesCstrs, mInputTensors.data(), mInputTensors.size(), outputNamesCstrs, mOutputTensors.data(), mOutputTensors.size());
     for (size_t i = 0; i < outputSize; i++)
-      mYScratch[i] = (diffuseOut[i] - mYScratch[i] * mSig[0]) / mMean[0];
-
+      mYScratch[i] = (diffuseOut[i] - scale * mYScratch[i]) / mMean[0];
   }
 
   inline std::vector<std::vector<int64_t>> GetInputShapes() const
@@ -175,12 +179,12 @@ private:
   Ort::RunOptions mRunOptions{nullptr};
   std::unique_ptr<Ort::Session> mSession;
 
-  std::vector<float> mXScratch;
-  std::vector<float> mSig;
-  std::vector<float> mMean;
-  std::vector<float> mYScratch;
-  std::vector<float> mNoise;
-  std::vector<double> sigVal = {0.0};
+  std::vector<float> mXScratch; // noise input
+  std::vector<float> mSig; // sigma
+  std::vector<float> mMean; // mean
+  std::vector<float> mYScratch; // audio output
+  std::vector<float> mNoise; // noise temp
+  std::vector<double> sigVal = {0.0}; // sigma input
 
   std::vector<Ort::Value> mInputTensors;
   std::vector<std::vector<int64_t>> mInputShapes;
@@ -190,7 +194,7 @@ private:
   std::vector<std::string> mInputNames;
   std::vector<std::string> mOutputNames;
 
-  std::random_device rnd_device;
+  std::random_device rnd_device; // random generator
   std::mt19937 mersenne_engine{rnd_device()}; // Generates random integers
   std::normal_distribution<float> d{0, 1};
 
