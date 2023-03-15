@@ -4,7 +4,7 @@
 #include "PluginProcessor.h"
 #include "Components.h"
 
-class Text2SampleAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer
+class Text2SampleAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     Text2SampleAudioProcessorEditor (Text2SampleAudioProcessor&);
@@ -15,8 +15,6 @@ public:
 
 private:
     Text2SampleAudioProcessor& _processor;
-
-	void timerCallback() override;
 
     class NoteSlider : public juce::Slider
     {
@@ -42,8 +40,6 @@ private:
 			"C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G", "G#4", "A4", "A#4", "B4"
 		};
     };
-
-	static constexpr int _midiUpdateTimerLength{ 30 };
 
     NoteSlider _noteSlider;
 	

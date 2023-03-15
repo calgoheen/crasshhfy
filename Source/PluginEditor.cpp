@@ -61,9 +61,8 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 	addAndMakeVisible(_loadButton);
 
 	// On-screen keyboard
-	_keyboard.reset(new SampleKeyboard(p.baseMidiNote, p.numSounds));
+	_keyboard.reset(new SampleKeyboard(p.baseMidiNote, p.numSounds, p.getMidiKeyboardState()));
 	addAndMakeVisible(*_keyboard);
-	startTimer(_midiUpdateTimerLength);
 
     setSize(600, 400);
 }
@@ -88,11 +87,4 @@ void Text2SampleAudioProcessorEditor::resized()
 	_loadButton.setBounds(bounds.removeFromTop(40));
 
 	_keyboard->setBounds(bounds);
-}
-
-void Text2SampleAudioProcessorEditor::timerCallback()
-{
-	auto& noteStates = _processor.getCurrentlyPlayingSounds();
-	for (int i = 0; i < noteStates.size(); i++)
-		_keyboard->setNoteOn(i, noteStates[i]);
 }

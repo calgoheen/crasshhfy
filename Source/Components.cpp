@@ -27,21 +27,25 @@ void SamplePad::paint(juce::Graphics& g)
 
 void SamplePad::setNoteOn(bool noteIsOn)
 {
-	_noteIsOn = noteIsOn;
-	repaint();
+	if (noteIsOn != _noteIsOn)
+	{
+		_noteIsOn = noteIsOn;
+		repaint();
+	}
 }
 
 
-SampleKeyboard::SampleKeyboard(int baseNote, int numNotes) : _baseMidiNote(baseNote)
+SampleKeyboard::SampleKeyboard(int baseNote, int numNotes, juce::MidiKeyboardState& midiKeyboardState, int midiChannel) 
+	: _baseMidiNote(baseNote), _midiState(midiKeyboardState), _midiChannel(midiChannel)
 {
 	for (int i = 0; i < numNotes; i++)
 	{
 		auto note = _notes.add(new SamplePad(baseNote + i));
+		note->addMouseListener(this, false);
 		addAndMakeVisible(note);
 	}
 
-	_noteOnStates.resize(numNotes);
-	std::fill(_noteOnStates.begin(), _noteOnStates.end(), false);
+	startTimer(_timerLengthMs);
 }
 
 void SampleKeyboard::resized()
@@ -81,9 +85,25 @@ void SampleKeyboard::resized()
 	}
 }
 
-void SampleKeyboard::setNoteOn(int noteIndex, bool noteIsOn)
+void SampleKeyboard::timerCallback()
 {
-	jassert(juce::isPositiveAndBelow(noteIndex, _noteOnStates.size()));
+	for (int i = 0; i < _notes.size(); i++)
+	{
+		auto noteState = _midiState.isNoteOn(_midiChannel, _baseMidiNote + i);
+		_notes[i]->setNoteOn(noteState);
+	}
+}
 
-	_notes[noteIndex]->setNoteOn(noteIsOn);
+void SampleKeyboard::mouseDown(const juce::MouseEvent& e)
+{
+	for (int i = 0; i < _notes.size(); i++)
+		if (_notes[i] == e.eventComponent)
+			_midiState.noteOn(_midiChannel, i + _baseMidiNote, 1.0f);
+}
+
+void SampleKeyboard::mouseUp(const juce::MouseEvent& e)
+{
+	for (int i = 0; i < _notes.size(); i++)
+		if (_notes[i] == e.eventComponent)
+			_midiState.noteOff(_midiChannel, i + _baseMidiNote, 1.0f);
 }

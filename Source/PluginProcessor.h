@@ -35,7 +35,7 @@ public:
 
     bool hasEditor() const override;
     juce::AudioProcessorEditor* createEditor() override;
-    const std::vector<bool>& getCurrentlyPlayingSounds() const;
+    juce::MidiKeyboardState& getMidiKeyboardState();
 
     void loadSample(int soundIndex, Sample::Ptr sample);
     void saveSample(int soundIndex, const juce::File& file);
@@ -63,9 +63,10 @@ private:
     juce::Synthesiser _synth;
     std::vector<Sound*> _sounds;
     std::vector<Voice*> _voices;
-    std::vector<bool> _currentlyPlayingSounds;
 
     CrashModelInference modelInference;
+
+    juce::MidiKeyboardState _midiState;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Text2SampleAudioProcessor)
 };

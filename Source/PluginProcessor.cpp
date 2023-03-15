@@ -18,9 +18,6 @@ Text2SampleAudioProcessor::Text2SampleAudioProcessor()
         _voices.push_back(voice);
         _synth.addVoice(voice);
     }
-
-    _currentlyPlayingSounds.resize(numSounds);
-    std::fill(_currentlyPlayingSounds.begin(), _currentlyPlayingSounds.end(), false);
 }
 
 Text2SampleAudioProcessor::~Text2SampleAudioProcessor()
@@ -44,28 +41,22 @@ void Text2SampleAudioProcessor::prepareToPlay(double sampleRate, int)
     for (int i = 0; i < _synth.getNumSounds(); i++)
         if (auto s = dynamic_cast<Sound*>(_synth.getSound(i).get()))
             s->setSampleRate(sampleRate);
+
+    _midiState.reset();
 }
 
 void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
 
+    _midiState.processNextMidiBuffer(midi, 0, buffer.getNumSamples(), true);
+
     buffer.clear();
     _synth.renderNextBlock(buffer, midi, 0, buffer.getNumSamples());
 
     Limiter limit{ buffer };
 
-    for (auto voice : _voices)
-    {
-        auto noteNum = voice->getCurrentlyPlayingNote();
-        if (noteNum >= 0)
-        {
-            auto idx = noteNum - baseMidiNote;
-            auto noteIsOn = voice->isNoteOn();
-
-            _currentlyPlayingSounds[idx] = noteIsOn;
-        }
-    }
+    midi.clear();
 }
 
 void Text2SampleAudioProcessor::releaseResources()
@@ -90,9 +81,9 @@ juce::AudioProcessorEditor* Text2SampleAudioProcessor::createEditor()
     return new Text2SampleAudioProcessorEditor (*this);
 }
 
-const std::vector<bool>& Text2SampleAudioProcessor::getCurrentlyPlayingSounds() const
+juce::MidiKeyboardState& Text2SampleAudioProcessor::getMidiKeyboardState()
 {
-    return _currentlyPlayingSounds;
+    return _midiState;
 }
 
 void Text2SampleAudioProcessor::loadSample(int soundIndex, Sample::Ptr sample)
