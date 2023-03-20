@@ -79,3 +79,65 @@ struct Utils
         }
     }
 };
+
+struct ParameterDefinition
+{
+    juce::String id;
+    juce::String name;
+    juce::String label;
+    juce::NormalisableRange<float> range;
+    float defaultValue;
+};
+
+class DummyProcessor : public juce::AudioProcessor
+{
+public:
+    DummyProcessor() = default;
+    ~DummyProcessor() override = default;
+
+private:
+    bool isBusesLayoutSupported (const BusesLayout&) const override { return false; }
+    void prepareToPlay(double, int) override {}
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override {}
+    void releaseResources() override {}
+    void getStateInformation (juce::MemoryBlock&) override {}
+    void setStateInformation (const void*, int) override {}
+    bool hasEditor() const override { return false; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    const juce::String getName() const override { return ""; }
+    bool acceptsMidi() const override { return false; }
+    bool producesMidi() const override { return false; }
+    bool isMidiEffect() const override { return false; }
+    double getTailLengthSeconds() const override { return 0.0; }
+    int getNumPrograms() override { return 0; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return ""; }
+    void changeProgramName(int, const juce::String&) override {}
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DummyProcessor)
+};
+
+class ParameterListener : public juce::AudioProcessorParameter::Listener
+{
+public:
+    ParameterListener(juce::RangedAudioParameter& param, std::function<void(float)> func)
+        : param(param), _func(std::move(func))
+    {
+        jassert(_func != nullptr);
+        param.addListener(this);
+    }
+
+private:
+    void parameterValueChanged(int, float newValue) override
+    {
+        _func(param.convertFrom0to1(newValue));
+    }
+
+    void parameterGestureChanged(int, bool) override {}
+
+    juce::RangedAudioParameter& param;
+    std::function<void(float)> _func;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterListener)
+};

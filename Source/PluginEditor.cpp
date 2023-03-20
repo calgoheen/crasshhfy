@@ -4,16 +4,14 @@
 Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), _processor(p)
 {
-	// Midi note slider
-	addAndMakeVisible(_noteSlider);
-
     // CRASH button
     _crashButton.setButtonText("Generate Sample");
     _crashButton.onClick = [this]
     {
 		_crashButton.setEnabled(false);
-        juce::Thread::launch([this] { 
-			_processor.generateSample(_noteSlider.getValue()); 
+		auto idx = _lastNoteIndex;
+        juce::Thread::launch([this, idx] { 
+			_processor.generateSample(idx); 
 			juce::MessageManager::callAsync([this] { _crashButton.setEnabled(true); });
 		});
     };
@@ -34,8 +32,8 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
             if (f == juce::File())
                 return;
             
-            auto idx = int(_noteSlider.getValue());
-			_processor.saveSample(idx, f);
+            if (_lastNoteIndex >= 0)
+				_processor.saveSample(_lastNoteIndex, f);
         });
 	};
 	addAndMakeVisible(_saveButton);
@@ -54,17 +52,28 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
             if (f == juce::File())
                 return;
             
-			auto idx = int(_noteSlider.getValue());
-			_processor.loadSampleFromFile(idx, f);
+			if (_lastNoteIndex >= 0)
+				_processor.loadSampleFromFile(_lastNoteIndex, f);
         });
     };
 	addAndMakeVisible(_loadButton);
 
 	// On-screen keyboard
 	_keyboard.reset(new SampleKeyboard(p.baseMidiNote, p.numSounds, p.getMidiKeyboardState()));
+	_keyboard->onSelectedNoteChange = [this](int noteIndex) 
+	{ 
+		_lastNoteIndex = noteIndex; 
+		updateParameterView();
+	};
 	addAndMakeVisible(*_keyboard);
 
-    setSize(600, 400);
+	// Sample parameter section
+	for (int i = 0; i < p.numSounds; i++)
+		addChildComponent(_parameterViews.add(new ParameterView(p.getSound(i))));
+	
+	updateParameterView();
+
+    setSize(400, 500);
 }
 
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
@@ -76,15 +85,22 @@ void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
 	g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 }
 
-
 void Text2SampleAudioProcessorEditor::resized()
 {
 	auto bounds = getLocalBounds().reduced(40);
 
-	_noteSlider.setBounds(bounds.removeFromTop(100).withSizeKeepingCentre(120, 60));
     _crashButton.setBounds(bounds.removeFromTop(40));
 	_saveButton.setBounds(bounds.removeFromTop(40));
 	_loadButton.setBounds(bounds.removeFromTop(40));
 
-	_keyboard->setBounds(bounds);
+	_keyboard->setBounds(bounds.removeFromTop(120));
+
+	for (auto view : _parameterViews)
+		view->setBounds(bounds);
+}
+
+void Text2SampleAudioProcessorEditor::updateParameterView()
+{
+	for (int i = 0; i < _parameterViews.size(); i++)
+		_parameterViews[i]->setVisible(i == _lastNoteIndex);
 }

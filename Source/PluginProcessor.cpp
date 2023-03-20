@@ -7,7 +7,7 @@ Text2SampleAudioProcessor::Text2SampleAudioProcessor()
 {
     for (int i = 0; i < numSounds; i++)
     {
-        auto sound = new Sound(baseMidiNote + i);
+        auto sound = new SoundWithParameters(baseMidiNote + i);
         _sounds.push_back(sound);
         _synth.addSound(sound);
     }
@@ -84,6 +84,12 @@ juce::AudioProcessorEditor* Text2SampleAudioProcessor::createEditor()
 juce::MidiKeyboardState& Text2SampleAudioProcessor::getMidiKeyboardState()
 {
     return _midiState;
+}
+
+SoundWithParameters* Text2SampleAudioProcessor::getSound(int soundIndex)
+{
+    jassert(juce::isPositiveAndBelow(soundIndex, _sounds.size()));
+    return _sounds[soundIndex];
 }
 
 void Text2SampleAudioProcessor::loadSample(int soundIndex, Sample::Ptr sample)

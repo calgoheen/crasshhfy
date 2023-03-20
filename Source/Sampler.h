@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "Fifo.h"
 #include "Sample.h"
+#include "Utilities.h"
 
 class Sound : public juce::SynthesiserSound
 {
@@ -24,7 +25,13 @@ public:
     bool isEmpty() const;
     void setFadeLength(double lengthInSeconds);
 
-    void setPitch(float pitchInSemitones);
+    void setGain(double gain);
+    double getGain() const;
+
+    void setPan(double pan);
+    double getPan() const;
+
+    void setPitch(double pitch);
     double getPitch() const;
 
     void setEnvelope(const juce::ADSR::Parameters& params);
@@ -40,6 +47,8 @@ private:
     double _sampleRate{ 0.0 };
     double _sourceSampleRate{ 0.0 };
 
+    double _gain{ 1.0f };
+    double _pan{ 0.5f };
     double _pitchSemitones{ 0.0f };
     juce::ADSR::Parameters _envelope{ 0.002f, 0.1f, 1.0f, 1.0f };
 
@@ -48,6 +57,36 @@ private:
     double _fadeLength{ 3e-3 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sound)
+};
+
+class SoundWithParameters : public Sound
+{
+public:
+    enum Parameters
+    {
+        kGain = 0,
+        kPan,
+        kPitch,
+        kAttack,
+        kDecay,
+        kSustain,
+        kRelease,
+        kNumParameters
+    };
+
+    SoundWithParameters(int midiNote);
+    ~SoundWithParameters() override = default;
+
+    juce::RangedAudioParameter* getParameter(int index);
+
+private:
+    void initializeParameters();
+
+    DummyProcessor _dummyProcessor;
+    juce::RangedAudioParameter* _parameters[kNumParameters];
+    juce::OwnedArray<ParameterListener> _listeners;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SoundWithParameters)
 };
 
 class Voice : public juce::SynthesiserVoice
@@ -76,8 +115,11 @@ private:
     bool _noteIsOn{ false };
 
     const Sound* _sound{ nullptr };
-    double _pitchRatio{ 1.0f };
-    double _currentIdx{ 0.0f };
+    double _pitchRatio{ 1.0 };
+    double _currentIdx{ 0.0 };
+
+    float _gain{ 1.0f };
+    float _pan{ 0.5f };
 
     const int _numFifoSamples{ 512 };
     Fifo _fifo;

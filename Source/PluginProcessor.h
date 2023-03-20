@@ -36,6 +36,7 @@ public:
     bool hasEditor() const override;
     juce::AudioProcessorEditor* createEditor() override;
     juce::MidiKeyboardState& getMidiKeyboardState();
+    SoundWithParameters* getSound(int soundIndex);
 
     void loadSample(int soundIndex, Sample::Ptr sample);
     void saveSample(int soundIndex, const juce::File& file);
@@ -61,7 +62,7 @@ private:
     juce::AudioProcessorValueTreeState _parameters;
 
     juce::Synthesiser _synth;
-    std::vector<Sound*> _sounds;
+    std::vector<SoundWithParameters*> _sounds;
     std::vector<Voice*> _voices;
 
     CrashModelInference modelInference;

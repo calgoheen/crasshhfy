@@ -61,9 +61,31 @@ void Sound::setFadeLength(double lengthInSeconds)
     updateCurrentSample();
 }
 
-void Sound::setPitch(float pitch)
+void Sound::setGain(double gain) 
 {
-    _pitchSemitones = pitch;
+    jassert(gain >= 0.0);
+    _gain = gain;
+}
+
+double Sound::getGain() const 
+{ 
+    return _gain; 
+}
+
+void Sound::setPan(double pan) 
+{ 
+    jassert(pan >= 0.0 && pan <= 1.0); 
+    _pan = pan; 
+}
+
+double Sound::getPan() const
+{ 
+    return _pan; 
+}
+
+void Sound::setPitch(double pitch) 
+{ 
+    _pitchSemitones = pitch; 
 }
 
 double Sound::getPitch() const
@@ -71,9 +93,9 @@ double Sound::getPitch() const
     return _pitchSemitones;
 }
 
-void Sound::setEnvelope(const juce::ADSR::Parameters& params)
-{
-    _envelope = params;
+void Sound::setEnvelope(const juce::ADSR::Parameters& params) 
+{ 
+    _envelope = params; 
 }
 
 const juce::ADSR::Parameters& Sound::getEnvelope() const
@@ -118,6 +140,53 @@ void Sound::updateCurrentSample()
     _prev = _current;
     _current = next;
 }
+
+
+SoundWithParameters::SoundWithParameters(int midiNote) 
+    : Sound(midiNote) 
+{ 
+    initializeParameters(); 
+}
+
+juce::RangedAudioParameter* SoundWithParameters::getParameter(int index)
+{
+    jassert(juce::isPositiveAndBelow(index, kNumParameters));
+    return _parameters[index];
+}
+
+void SoundWithParameters::initializeParameters()
+{
+    ParameterDefinition defs[kNumParameters] = {
+        { "Gain",       "Gain",     "dB",   { -30.0f, 30.0f },              0.0f },
+        { "Pan",        "Pan",      "%",    { -100.0f, 100.0f },            0.0f },
+        { "Pitch",      "Pitch",    "st",   { -12.0f, 12.0f },              0.0f },
+        { "Attack",     "Attack",   "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.01f },
+        { "Decay",      "Decay",    "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.1f },
+        { "Sustain",    "Sustain",  "%",    { 0.0f, 100.0f },               100.0f },
+        { "Release",    "Release",  "s",    { 0.001f, 10.0f, 0.0f, 0.25f }, 0.1f }
+    };
+
+    std::function<void(float)> funcs[kNumParameters] = {
+        [this](float x) { setGain(juce::Decibels::decibelsToGain(x)); },
+        [this](float x) { setPan(juce::jmap(x, -100.0f, 100.0f, 0.0f, 1.0f)); },
+        [this](float x) { setPitch(x); },
+        [this](float x) { auto env = getEnvelope(); env.attack = x; setEnvelope(env); },
+        [this](float x) { auto env = getEnvelope(); env.decay = x; setEnvelope(env); },
+        [this](float x) { auto env = getEnvelope(); env.sustain = 0.01f * x; setEnvelope(env); },
+        [this](float x) { auto env = getEnvelope(); env.release = x; setEnvelope(env); }
+    };
+
+    for (int i = 0; i < kNumParameters; i++)
+    {
+        auto& d = defs[i];
+        auto p = new juce::AudioParameterFloat({ d.id, 1 }, d.name, d.range, d.defaultValue, d.label);
+
+        _dummyProcessor.addParameter(p);
+        _parameters[i] = p;
+        _listeners.add(new ParameterListener{ *p, std::move(funcs[i]) });
+    }
+}
+
 
 /*template <int k>
 struct LagrangeResampleHelper
@@ -191,6 +260,9 @@ void Voice::startNote(int, float, juce::SynthesiserSound* sound, int)
 
         _pitchRatio = std::pow(2.0, _sound->getPitch() / 12.0);
         _currentIdx = 0.0;
+
+        _gain = _sound->getGain();
+        _pan = _sound->getPan();
     }
 }
 
@@ -322,9 +394,13 @@ Voice::StereoSample Voice::getNextSample()
     jassert(_sound != nullptr && !_sound->isEmpty());
 
     // Get current sample output and increment index & ADSR
-    auto g = _adsr.getNextSample();
+    auto g = _adsr.getNextSample() * _gain;
     auto [l, r] = readFromSample(_sound->getSampleData(), float(_currentIdx));
     _currentIdx += _pitchRatio;
 
-    return { l * g, r * g };
+    // Apply pan
+    auto panLeft = juce::dsp::FastMathApproximations::cos(juce::MathConstants<float>::halfPi * _pan);
+    auto panRight = juce::dsp::FastMathApproximations::sin(juce::MathConstants<float>::halfPi * _pan);
+
+    return { l * g * panLeft, r * g * panRight };
 }
