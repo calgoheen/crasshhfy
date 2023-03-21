@@ -119,7 +119,8 @@ void Text2SampleAudioProcessor::loadSampleFromFile(int soundIndex, const juce::F
     loadSample(soundIndex, new Sample{ std::move(data), fs });
 }
 
-void Text2SampleAudioProcessor::generateSample(int soundIndex) {
+void Text2SampleAudioProcessor::generateSample(int soundIndex)
+{
     Drum drum;
     renderCRASHSample(&drum);
     loadSample(soundIndex, drum.sample);
