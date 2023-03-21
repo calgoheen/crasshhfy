@@ -7,8 +7,8 @@ LICENSE: MIT
 
 #pragma once
 
-#include "onnxruntime_cxx_api.h"
-#include "model.ort.h"
+#include <onnxruntime_cxx_api.h>
+#include <crash.ort.h>
 
 #include <vector>
 #include <array>
@@ -28,7 +28,7 @@ public:
     sessionOptions.SetIntraOpNumThreads(1);
     sessionOptions.SetInterOpNumThreads(1);
 
-    mSession = std::make_unique<Ort::Session>(mEnv, (void *)model_ort_start, model_ort_size, sessionOptions);
+    mSession = std::make_unique<Ort::Session>(mEnv, (void *)crash_ort_start, crash_ort_size, sessionOptions);
     auto info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
     mInputShapes = GetInputShapes();

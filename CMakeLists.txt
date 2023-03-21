@@ -49,7 +49,7 @@ file(GLOB SourceFiles CONFIGURE_DEPENDS
 target_sources(${PROJECT_NAME} 
     PRIVATE 
         ${SourceFiles} 
-        "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model/model.ort.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model/crash.ort.c"
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "" FILES ${SourceFiles})
