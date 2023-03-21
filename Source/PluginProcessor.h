@@ -3,7 +3,8 @@
 #include <JuceHeader.h>
 #include "Sampler.h"
 #include "Utilities.h"
-#include "CrashModelInference.h"
+#include "UnetModelInference.h"
+#include "ClassifierModelInference.h"
 
 struct Limiter
 {
@@ -29,7 +30,6 @@ public:
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
     void releaseResources() override;
-    
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
@@ -40,7 +40,6 @@ public:
 
     void loadSample(int soundIndex, Sample::Ptr sample);
     void saveSample(int soundIndex, const juce::File& file);
-    
     void loadSampleFromFile(int soundIndex, const juce::File& file);
     void generateSample(int soundIndex);
 
@@ -56,7 +55,16 @@ public:
     void changeProgramName(int, const juce::String&) override;
 
 private:
-    Sample::Ptr renderCRASHSample();
+    enum DrumClass {
+        kick, snare, hat
+    };
+    struct Drum {
+        Sample::Ptr sample;
+        DrumClass drumType;
+        float confidence;
+    };
+
+    void renderCRASHSample(Drum *d);
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     juce::AudioProcessorValueTreeState _parameters;
@@ -65,7 +73,8 @@ private:
     std::vector<SoundWithParameters*> _sounds;
     std::vector<Voice*> _voices;
 
-    CrashModelInference modelInference;
+    UnetModelInference unetModelInference;
+    ClassifierModelInference classifierModelInference;
 
     juce::MidiKeyboardState _midiState;
 

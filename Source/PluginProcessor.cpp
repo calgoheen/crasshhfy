@@ -121,8 +121,9 @@ void Text2SampleAudioProcessor::loadSampleFromFile(int soundIndex, const juce::F
 
 void Text2SampleAudioProcessor::generateSample(int soundIndex)
 {
-    auto sample = renderCRASHSample();
-    loadSample(soundIndex, sample);
+    Drum drum;
+    renderCRASHSample(&drum);
+    loadSample(soundIndex, drum.sample);
 }
 
 const juce::String Text2SampleAudioProcessor::getName() const
@@ -198,13 +199,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout Text2SampleAudioProcessor::c
     return { params.begin(), params.end() };
 }
 
-Sample::Ptr Text2SampleAudioProcessor::renderCRASHSample()
+void Text2SampleAudioProcessor::renderCRASHSample(Drum *d)
 {
     juce::AudioBuffer<float> data;
-    data.setSize(CrashModelInference::numChannels, CrashModelInference::outputSize);
-    modelInference.process(data.getWritePointer(0));
-
-    return new Sample{ std::move(data), CrashModelInference::sampleRate };
+    size_t classification = 0;
+    float confidence = 0;
+    data.setSize(UnetModelInference::numChannels, UnetModelInference::outputSize);
+    unetModelInference.process(data.getWritePointer(0));
+    classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
+    // 0 = Kick, 1 = Hat, 2 = Snare
+    auto drumType = static_cast<DrumClass>(classification);
+    d->sample = new Sample{std::move(data), UnetModelInference::sampleRate};
+    d->drumType = drumType;
+    d->confidence = confidence;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
