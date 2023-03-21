@@ -49,7 +49,9 @@ file(GLOB SourceFiles CONFIGURE_DEPENDS
 target_sources(${PROJECT_NAME} 
     PRIVATE 
         ${SourceFiles} 
-        "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model/model.ort.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model/crash.ort.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/ort-builder/model/classifier.ort.c"
+
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "" FILES ${SourceFiles})
@@ -92,6 +94,7 @@ target_link_libraries(${PROJECT_NAME}
         Assets
         ${JUCE_DEPENDENCIES}
         ${ONNX_RUNTIME}
+        ${CLASSIFIER_ONNX_RUNTIME}
         r8b
     PUBLIC
         juce::juce_recommended_config_flags
