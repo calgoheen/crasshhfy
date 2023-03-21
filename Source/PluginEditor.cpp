@@ -4,18 +4,26 @@
 Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), _processor(p)
 {
-    // CRASH button
-    _crashButton.setButtonText("Generate Sample");
-    _crashButton.onClick = [this]
+    // Generate sample
+    _generateButton.setButtonText("Generate");
+    _generateButton.onClick = [this]
     {
-		_crashButton.setEnabled(false);
+		_generateButton.setEnabled(false);
 		auto idx = _lastNoteIndex;
         juce::Thread::launch([this, idx] { 
 			_processor.generateSample(idx); 
-			juce::MessageManager::callAsync([this] { _crashButton.setEnabled(true); });
+			juce::MessageManager::callAsync([this] { _generateButton.setEnabled(true); });
 		});
     };
-    addAndMakeVisible(_crashButton);
+    addAndMakeVisible(_generateButton);
+
+	// Drumify sample
+	_drumifyButton.setButtonText("Drumify");
+	addAndMakeVisible(_drumifyButton);
+
+	// Inpaint sample
+	_inpaintButton.setButtonText("Variation");
+	addAndMakeVisible(_inpaintButton);
 
 	// Save sample to file
 	_saveButton.setButtonText("Save Sample");
@@ -73,7 +81,7 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 	
 	updateParameterView();
 
-    setSize(400, 500);
+    setSize(600, 400);
 }
 
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
@@ -87,16 +95,22 @@ void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
 
 void Text2SampleAudioProcessorEditor::resized()
 {
-	auto bounds = getLocalBounds().reduced(40);
+	auto bounds = getLocalBounds();
 
-    _crashButton.setBounds(bounds.removeFromTop(40));
-	_saveButton.setBounds(bounds.removeFromTop(40));
-	_loadButton.setBounds(bounds.removeFromTop(40));
+	auto top = bounds.removeFromTop(80);
+	auto mid = bounds.removeFromTop(160).reduced(10);
+	auto bottom = bounds;
 
-	_keyboard->setBounds(bounds.removeFromTop(120));
+	auto buttonSectionWidth = top.getWidth() / 3;
+	auto generateBounds = top.removeFromLeft(buttonSectionWidth).withSizeKeepingCentre(80, 30);
+    _generateButton.setBounds(generateBounds);
+	_drumifyButton.setBounds(generateBounds.translated(buttonSectionWidth, 0));
+	_inpaintButton.setBounds(generateBounds.translated(2 * buttonSectionWidth, 0));
+
+	_keyboard->setBounds(mid);
 
 	for (auto view : _parameterViews)
-		view->setBounds(bounds);
+		view->setBounds(bottom);
 }
 
 void Text2SampleAudioProcessorEditor::updateParameterView()
