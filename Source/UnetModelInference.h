@@ -58,10 +58,27 @@ public:
     }
 
     void process(float *output) {
+        // Noise Input
+        for (size_t i = 0; i < outputSize; i++)
+            mXScratch[i] = d(mersenne_engine);
         RunInference();
-
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
+
+    void processSeeded(float *output, float* seedAudio) {
+        // Audio Input
+        memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
+        RunInference();
+        memcpy(output, mYScratch.data(), outputSize * sizeof(float));
+    }
+
+    void processSeededInpainting(float *output, float* seedAudio, bool paintHalf) {
+        // Audio Input
+        memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
+        RunInference();
+        memcpy(output, mYScratch.data(), outputSize * sizeof(float));
+    }
+
 
 private:
     void RunInference() {
@@ -70,9 +87,7 @@ private:
         mSig = s;
         mMean = m;
         std::fill(mYScratch.begin(), mYScratch.end(), 0.0f);
-        for (size_t i = 0; i < outputSize; i++)
-            mNoise[i] = d(mersenne_engine);
-        mXScratch = mNoise;
+
         const char *inputNamesCstrs[] = {mInputNames[0].c_str(), mInputNames[1].c_str()};
         const char *outputNamesCstrs[] = {mOutputNames[0].c_str()};
 
