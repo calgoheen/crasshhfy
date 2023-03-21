@@ -94,7 +94,6 @@ target_link_libraries(${PROJECT_NAME}
         Assets
         ${JUCE_DEPENDENCIES}
         ${ONNX_RUNTIME}
-        ${CLASSIFIER_ONNX_RUNTIME}
         r8b
     PUBLIC
         juce::juce_recommended_config_flags
