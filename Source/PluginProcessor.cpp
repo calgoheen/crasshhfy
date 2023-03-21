@@ -125,6 +125,7 @@ void Text2SampleAudioProcessor::generateSample(int soundIndex)
     renderCRASHSample(&drum);
     loadSample(soundIndex, drum.sample);
 }
+
 const juce::String Text2SampleAudioProcessor::getName() const
 {
     return JucePlugin_Name;
