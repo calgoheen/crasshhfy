@@ -18,7 +18,10 @@ private:
 
     Text2SampleAudioProcessor& _processor;
 
-    juce::TextButton _crashButton;
+    juce::TextButton _generateButton;
+    juce::TextButton _drumifyButton;
+    juce::TextButton _inpaintButton;
+    
 	juce::TextButton _saveButton;
 	juce::TextButton _loadButton;
 
