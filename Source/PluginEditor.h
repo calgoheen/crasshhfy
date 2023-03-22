@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "LookAndFeel.h"
 #include "Components.h"
 
 class Text2SampleAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -18,6 +19,8 @@ private:
     void setButtonsEnabled(bool enabled);
 
     Text2SampleAudioProcessor& _processor;
+
+    CustomLookAndFeel _laf;
 
     juce::TextButton _generateButton;
     juce::TextButton _drumifyButton;

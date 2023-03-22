@@ -4,6 +4,8 @@
 Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), _processor(p)
 {
+	setLookAndFeel(&_laf);
+
     // Generate sample
     _generateButton.setButtonText("Generate");
     _generateButton.onClick = [this]
@@ -133,6 +135,7 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
 {
+	setLookAndFeel(nullptr);
 }
 
 void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
