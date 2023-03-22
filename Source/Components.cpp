@@ -2,7 +2,7 @@
 
 SamplePad::SamplePad(int midiNoteNumber) : _midiNote(midiNoteNumber)
 {
-	_label = juce::MidiMessage::getMidiNoteName(midiNoteNumber, true, false, 0);
+	_noteName = juce::MidiMessage::getMidiNoteName(midiNoteNumber, true, true, 4);
 }
 
 int SamplePad::getMidiNote() const
@@ -26,12 +26,24 @@ void SamplePad::paint(juce::Graphics& g)
 		g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(selectedThickness / 2.0f), corner, selectedThickness);
 	}
 
-	// Label
+	auto labelHeight = getHeight() / 5;
+	auto bounds = getLocalBounds();
+
+	// Note name
 	g.setColour(juce::Colours::black);
-	g.drawText(_label, 
-				getLocalBounds().removeFromBottom(getHeight() / 5).toFloat(), 
-				juce::Justification::centred, 
-				false);
+	g.drawText(_noteName, 
+			   bounds.removeFromBottom(labelHeight).toFloat(), 
+			   juce::Justification::centred, 
+			   false);
+
+	if (_label.isNotEmpty())
+	{
+		g.setColour(juce::Colours::black);
+		g.drawText(_label, 
+				   bounds.withSizeKeepingCentre(getWidth(), labelHeight), 
+				   juce::Justification::centred, 
+				   false);
+	}
 }
 
 void SamplePad::setNoteOn(bool noteIsOn)
@@ -52,6 +64,12 @@ void SamplePad::setNoteSelected(bool isSelected)
 	}
 }
 
+void SamplePad::setLabel(const juce::String& label)
+{
+	_label = label;
+	repaint();
+}
+
 
 SampleKeyboard::SampleKeyboard(int baseNote, int numNotes, juce::MidiKeyboardState& midiKeyboardState, int midiChannel) 
 	: _baseMidiNote(baseNote), _midiState(midiKeyboardState), _midiChannel(midiChannel)
@@ -70,43 +88,17 @@ SampleKeyboard::SampleKeyboard(int baseNote, int numNotes, juce::MidiKeyboardSta
 
 void SampleKeyboard::resized()
 {
-	// Quick method of arranging the notes, probably has some flaws
-	// For example the first note and last note cannot be sharp
-	auto numNotes = _notes.size();
-	int numWhiteNotes = 0;
-	for (int i = 0; i < numNotes; i++)
-		if (!juce::MidiMessage::isMidiNoteBlack(_notes[i]->getMidiNote()))
-			++numWhiteNotes;
+	auto w = getWidth() / _notes.size();
+	auto bounds = getLocalBounds().withSizeKeepingCentre(w * _notes.size(), getHeight());
 
-	auto noteWidth = getWidth() / numWhiteNotes;
-	auto noteHeight = getHeight() / 2;
-	auto bounds = getLocalBounds().withSizeKeepingCentre(noteWidth * numWhiteNotes, getHeight());
-	
-	auto blackNoteBounds = bounds.removeFromTop(noteHeight);
-	auto whiteNoteBounds = bounds.removeFromBottom(noteHeight);
-
-	for (int i = 0; i < numNotes; i++)
-	{
-		auto isWhite = !juce::MidiMessage::isMidiNoteBlack(_notes[i]->getMidiNote());
-		juce::Rectangle<int> noteBounds;
-
-		if (isWhite)
-		{
-			noteBounds = whiteNoteBounds.removeFromLeft(noteWidth);
-		}
-		else if (i != 0)
-		{
-			auto lastWhiteNoteX = _notes[i - 1]->getBounds().getX();
-			auto pos = juce::Point<int>{ lastWhiteNoteX + noteWidth / 2, blackNoteBounds.getY() };
-			noteBounds = juce::Rectangle<int>().withSize(noteWidth, noteHeight).withPosition(pos);
-		}
-
-		_notes[i]->setBounds(noteBounds);
-	}
+	for (auto note : _notes)
+		note->setBounds(bounds.removeFromLeft(w).withSizeKeepingCentre(70, 55));
 }
 
 void SampleKeyboard::setSelectedNote(int idx)
 {
+	jassert(idx < _notes.size());
+
 	if (idx != _lastNoteIndex)
 	{
 		_lastNoteIndex = idx;
@@ -115,6 +107,12 @@ void SampleKeyboard::setSelectedNote(int idx)
 		if (onSelectedNoteChange)
 			onSelectedNoteChange(idx);
 	}
+}
+
+void SampleKeyboard::setNoteLabel(int idx, const juce::String& label)
+{
+	jassert(juce::isPositiveAndBelow(idx, _notes.size()));
+	_notes[idx]->setLabel(label);
 }
 
 void SampleKeyboard::timerCallback()

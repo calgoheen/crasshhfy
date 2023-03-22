@@ -78,9 +78,27 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 	};
 	addAndMakeVisible(*_keyboard);
 
-	// Sample parameter section
 	for (int i = 0; i < p.numSounds; i++)
-		addChildComponent(_parameterViews.add(new ParameterView(p.getSound(i))));
+	{
+		auto s = p.getSound(i);
+
+		// Set up parameter controls for the sample
+		addChildComponent(_parameterViews.add(new ParameterView(s)));
+
+		// Change note label depending on classifier output
+		s->drumChanged = [this, i, s] 
+		{
+			juce::String label = "";
+			switch(s->getDrumType())
+			{
+				case DrumType::kick: 	label = "Kick"; 	break;
+				case DrumType::snare: 	label = "Snare"; 	break;
+				case DrumType::hat: 	label = "Hat"; 		break;
+			};
+
+			_keyboard->setNoteLabel(i, label);
+		};
+	}
 	
 	updateParameterView();
 

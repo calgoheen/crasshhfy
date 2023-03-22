@@ -195,7 +195,7 @@ void DrumSound::loadDrum(Drum d)
     setSample(d.sample);
 
     if (drumChanged)
-        drumChanged();
+        juce::MessageManager::getInstance()->callAsync([this] { drumChanged(); });
 }
 
 DrumType DrumSound::getDrumType() const

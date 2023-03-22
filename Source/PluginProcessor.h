@@ -19,7 +19,7 @@ struct Limiter
 class Text2SampleAudioProcessor : public juce::AudioProcessor
 {
 public:
-    const int numSounds = 12;
+    const int numSounds = 4;
     const int numVoices = 8;
     const int baseMidiNote = 60;
 
@@ -42,7 +42,7 @@ public:
 
     void generateSample(int soundIndex);
     void drumifySample(int soundIndex, const juce::File& file);
-    
+
     const juce::String getName() const override;
     bool acceptsMidi() const override;
     bool producesMidi() const override;
