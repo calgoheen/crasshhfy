@@ -15,6 +15,7 @@ public:
 
 private:
 	void updateParameterView();
+    void setButtonsEnabled(bool enabled);
 
     Text2SampleAudioProcessor& _processor;
 

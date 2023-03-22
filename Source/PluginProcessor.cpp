@@ -7,7 +7,7 @@ Text2SampleAudioProcessor::Text2SampleAudioProcessor()
 {
     for (int i = 0; i < numSounds; i++)
     {
-        auto sound = new SoundWithParameters(baseMidiNote + i);
+        auto sound = new DrumSound(baseMidiNote + i);
         _sounds.push_back(sound);
         _synth.addSound(sound);
     }
@@ -86,44 +86,67 @@ juce::MidiKeyboardState& Text2SampleAudioProcessor::getMidiKeyboardState()
     return _midiState;
 }
 
-SoundWithParameters* Text2SampleAudioProcessor::getSound(int soundIndex)
+DrumSound* Text2SampleAudioProcessor::getSound(int soundIndex)
 {
     jassert(juce::isPositiveAndBelow(soundIndex, _sounds.size()));
     return _sounds[soundIndex];
 }
 
-void Text2SampleAudioProcessor::loadSample(int soundIndex, Sample::Ptr sample)
-{
-    jassert(juce::isPositiveAndBelow(soundIndex, _synth.getNumSounds()));
-
-    if (auto sound = dynamic_cast<Sound*>(_synth.getSound(soundIndex).get()))
-        sound->setSample(sample);
-}
-
 void Text2SampleAudioProcessor::saveSample(int soundIndex, const juce::File& file)
 {
-    jassert(juce::isPositiveAndBelow(soundIndex, _synth.getNumSounds()));
+    auto sample = getSound(soundIndex)->getSample();
 
-    if (auto sound = dynamic_cast<Sound*>(_synth.getSound(soundIndex).get()))
-    {
-        auto sample = sound->getSample();
-
-        if (sample != nullptr)
-            Utils::writeWavFile(sample->data, sample->sampleRate, file);
-    }
-}
-
-void Text2SampleAudioProcessor::loadSampleFromFile(int soundIndex, const juce::File& file)
-{
-    auto [data, fs] = Utils::readWavFile(file);
-    loadSample(soundIndex, new Sample{ std::move(data), fs });
+    if (sample != nullptr)
+        Utils::writeWavFile(sample->data, sample->sampleRate, file);
 }
 
 void Text2SampleAudioProcessor::generateSample(int soundIndex)
 {
-    Drum drum;
-    renderCRASHSample(&drum);
-    loadSample(soundIndex, drum.sample);
+    juce::AudioBuffer<float> data{ UnetModelInference::numChannels, UnetModelInference::outputSize };
+    size_t classification = 0;
+    float confidence = 0;
+
+    unetModelInference.process(data.getWritePointer(0));
+    classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
+
+    Utils::normalize(data);
+    data.applyGain(juce::Decibels::decibelsToGain(-3.0f));
+    
+    // 0 = Kick, 1 = Hat, 2 = Snare
+    Drum d;
+    d.sample = new Sample{ std::move(data), UnetModelInference::sampleRate };
+    d.drumType = static_cast<DrumType>(classification);
+    d.confidence = confidence;
+
+    getSound(soundIndex)->loadDrum(d);
+}
+
+void Text2SampleAudioProcessor::drumifySample(int soundIndex, const juce::File& file)
+{
+    auto [inputData, fs] = Utils::readWavFile(file);
+
+    if (inputData.getNumSamples() == 0)
+        return;
+
+    inputData.setSize(UnetModelInference::numChannels, UnetModelInference::outputSize, true, true);
+
+    juce::AudioBuffer<float> outputData{ UnetModelInference::numChannels, UnetModelInference::outputSize };
+    size_t classification = 0;
+    float confidence = 0;
+
+    unetModelInference.processSeeded(outputData.getWritePointer(0), inputData.getReadPointer(0));
+    classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
+
+    Utils::normalize(outputData);
+    outputData.applyGain(juce::Decibels::decibelsToGain(-3.0f));
+    
+    // 0 = Kick, 1 = Hat, 2 = Snare
+    Drum d;
+    d.sample = new Sample{ std::move(outputData), UnetModelInference::sampleRate };
+    d.drumType = static_cast<DrumType>(classification);
+    d.confidence = confidence;
+
+    getSound(soundIndex)->loadDrum(d);
 }
 
 const juce::String Text2SampleAudioProcessor::getName() const
@@ -176,17 +199,8 @@ void Text2SampleAudioProcessor::changeProgramName(int, const juce::String&)
 
 juce::AudioProcessorValueTreeState::ParameterLayout Text2SampleAudioProcessor::createParameterLayout()
 {
-    // Makes the list of parameters easier to read/edit
-    struct ParameterDefinition
-    {
-        juce::String id;
-        juce::String name;
-        juce::NormalisableRange<float> range;
-        float defaultValue;
-    };
-
     std::vector<ParameterDefinition> definitions = {
-        { "Gain", "Gain", { 0.0f, 1.0f }, 0.5f }
+        { "Gain", "Gain", "", { 0.0f, 1.0f }, 0.5f }
     };
 
     std::vector<std::unique_ptr<juce::AudioParameterFloat>> params;
@@ -194,24 +208,28 @@ juce::AudioProcessorValueTreeState::ParameterLayout Text2SampleAudioProcessor::c
         params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ d.id, 1 }, 
                                                                      d.name, 
                                                                      d.range, 
-                                                                     d.defaultValue));
+                                                                     d.defaultValue,
+                                                                     d.label));
 
     return { params.begin(), params.end() };
 }
 
-void Text2SampleAudioProcessor::renderCRASHSample(Drum *d)
+Drum Text2SampleAudioProcessor::renderCRASHSample()
 {
-    juce::AudioBuffer<float> data;
+    juce::AudioBuffer<float> data{ UnetModelInference::numChannels, UnetModelInference::outputSize };
     size_t classification = 0;
     float confidence = 0;
-    data.setSize(UnetModelInference::numChannels, UnetModelInference::outputSize);
+
     unetModelInference.process(data.getWritePointer(0));
     classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
+    
     // 0 = Kick, 1 = Hat, 2 = Snare
-    auto drumType = static_cast<DrumClass>(classification);
-    d->sample = new Sample{std::move(data), UnetModelInference::sampleRate};
-    d->drumType = drumType;
-    d->confidence = confidence;
+    Drum output;
+    output.sample = new Sample{ std::move(data), UnetModelInference::sampleRate };
+    output.drumType = static_cast<DrumType>(classification);
+    output.confidence = confidence;
+
+    return output;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

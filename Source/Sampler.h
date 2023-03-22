@@ -89,6 +89,25 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SoundWithParameters)
 };
 
+class DrumSound : public SoundWithParameters
+{
+public:
+    DrumSound(int midiNote) : SoundWithParameters(midiNote) {}
+    ~DrumSound() override = default;
+
+    std::function<void()> drumChanged = nullptr;
+
+    void loadDrum(Drum d);
+    DrumType getDrumType() const;
+    float getConfidence() const;
+
+private:
+    DrumType _drumType{ DrumType::kick };
+    float _confidence{ 0.0f };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DrumSound)
+};
+
 class Voice : public juce::SynthesiserVoice
 {
 public:

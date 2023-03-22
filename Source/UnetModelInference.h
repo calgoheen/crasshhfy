@@ -54,7 +54,7 @@ public:
                                                 mOutputShapes[0].size()));
 
         // Prime onnxruntime, so that it doesn't allocate in the RT Thread
-        RunInference();
+        //RunInference();
     }
 
     void process(float *output) {
@@ -65,7 +65,7 @@ public:
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
-    void processSeeded(float *output, float* seedAudio) {
+    void processSeeded(float *output, const float* seedAudio) {
         // Audio Input
         memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
         RunInference();

@@ -78,6 +78,25 @@ struct Utils
                 data[startSample + i] *= std::sqrt(float(numSamples - i) / numSamples);
         }
     }
+
+    static void normalize(juce::AudioBuffer<float>& buffer)
+    {
+        auto ptr = buffer.getArrayOfWritePointers();
+        
+        float max = 0.0f;
+        for (int j = 0; j < buffer.getNumChannels(); j++)
+        {
+            for (int i = 0; i < buffer.getNumSamples(); i++)
+            {
+                auto val = std::abs(ptr[j][i]);
+                if (val > max) max = val;
+            }
+        }
+
+        for (int j = 0; j < buffer.getNumChannels(); j++)
+            for (int i = 0; i < buffer.getNumSamples(); i++)
+                ptr[j][i] /= max;
+    }
 };
 
 struct ParameterDefinition

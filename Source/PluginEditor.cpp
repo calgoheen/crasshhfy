@@ -8,17 +8,40 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
     _generateButton.setButtonText("Generate");
     _generateButton.onClick = [this]
     {
-		_generateButton.setEnabled(false);
+		setButtonsEnabled(false);
 		auto idx = _lastNoteIndex;
         juce::Thread::launch([this, idx] { 
 			_processor.generateSample(idx); 
-			juce::MessageManager::callAsync([this] { _generateButton.setEnabled(true); });
+			juce::MessageManager::callAsync([this] { setButtonsEnabled(true); });
 		});
     };
     addAndMakeVisible(_generateButton);
 
 	// Drumify sample
 	_drumifyButton.setButtonText("Drumify");
+	_drumifyButton.onClick = [this]
+	{
+		auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+		auto defaultPath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+		auto idx = _lastNoteIndex;
+
+        _chooser = std::make_unique<juce::FileChooser>("Load wav file", defaultPath, "*.wav");
+        _chooser->launchAsync(flags, [this, idx](const juce::FileChooser& chooser) {
+            auto f = chooser.getResult();
+            
+            if (f == juce::File())
+                return;
+
+			if (idx < 0)
+				return;
+            
+			setButtonsEnabled(false);
+			juce::Thread::launch([this, idx, f] { 
+				_processor.drumifySample(idx, f); 
+				juce::MessageManager::callAsync([this] { setButtonsEnabled(true); });
+			});
+        });
+	};
 	addAndMakeVisible(_drumifyButton);
 
 	// Inpaint sample
@@ -45,26 +68,6 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
         });
 	};
 	addAndMakeVisible(_saveButton);
-
-	// Load sample from file
-	_loadButton.setButtonText("Load Sample");
-	_loadButton.onClick = [this] 
-	{
-        auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
-		auto defaultPath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
-        _chooser = std::make_unique<juce::FileChooser>("Load wav file", defaultPath, "*.wav");
-        
-        _chooser->launchAsync(flags, [this](const juce::FileChooser& chooser) {
-            auto f = chooser.getResult();
-            
-            if (f == juce::File())
-                return;
-            
-			if (_lastNoteIndex >= 0)
-				_processor.loadSampleFromFile(_lastNoteIndex, f);
-        });
-    };
-	addAndMakeVisible(_loadButton);
 
 	// On-screen keyboard
 	_keyboard.reset(new SampleKeyboard(p.baseMidiNote, p.numSounds, p.getMidiKeyboardState()));
@@ -117,4 +120,11 @@ void Text2SampleAudioProcessorEditor::updateParameterView()
 {
 	for (int i = 0; i < _parameterViews.size(); i++)
 		_parameterViews[i]->setVisible(i == _lastNoteIndex);
+}
+
+void Text2SampleAudioProcessorEditor::setButtonsEnabled(bool enabled)
+{
+	_generateButton.setEnabled(enabled);
+	_drumifyButton.setEnabled(enabled);
+	_inpaintButton.setEnabled(enabled);
 }

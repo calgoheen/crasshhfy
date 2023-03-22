@@ -53,7 +53,7 @@ public:
                                                 mOutputShapes[0].size()));
 
         // Prime onnxruntime, so that it doesn't allocate in the RT Thread
-        RunInference();
+        //RunInference();
     }
 
     void process(const float *input, size_t *classification, float *confidence) {

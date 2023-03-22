@@ -16,3 +16,17 @@ struct Sample : public juce::ReferenceCountedObject
 
     JUCE_DECLARE_NON_COPYABLE(Sample)
 };
+
+enum class DrumType 
+{
+    kick = 0, 
+    snare, 
+    hat
+};
+
+struct Drum 
+{
+	Sample::Ptr sample;
+	DrumType drumType;
+	float confidence;
+};

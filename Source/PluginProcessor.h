@@ -36,13 +36,13 @@ public:
     bool hasEditor() const override;
     juce::AudioProcessorEditor* createEditor() override;
     juce::MidiKeyboardState& getMidiKeyboardState();
-    SoundWithParameters* getSound(int soundIndex);
+    DrumSound* getSound(int soundIndex);
 
-    void loadSample(int soundIndex, Sample::Ptr sample);
     void saveSample(int soundIndex, const juce::File& file);
-    void loadSampleFromFile(int soundIndex, const juce::File& file);
-    void generateSample(int soundIndex);
 
+    void generateSample(int soundIndex);
+    void drumifySample(int soundIndex, const juce::File& file);
+    
     const juce::String getName() const override;
     bool acceptsMidi() const override;
     bool producesMidi() const override;
@@ -55,22 +55,13 @@ public:
     void changeProgramName(int, const juce::String&) override;
 
 private:
-    enum DrumClass {
-        kick, snare, hat
-    };
-    struct Drum {
-        Sample::Ptr sample;
-        DrumClass drumType;
-        float confidence;
-    };
-
-    void renderCRASHSample(Drum *d);
+    Drum renderCRASHSample();
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     juce::AudioProcessorValueTreeState _parameters;
 
     juce::Synthesiser _synth;
-    std::vector<SoundWithParameters*> _sounds;
+    std::vector<DrumSound*> _sounds;
     std::vector<Voice*> _voices;
 
     UnetModelInference unetModelInference;

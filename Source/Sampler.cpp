@@ -188,6 +188,27 @@ void SoundWithParameters::initializeParameters()
 }
 
 
+void DrumSound::loadDrum(Drum d)
+{
+    _drumType = d.drumType;
+    _confidence = d.confidence;
+    setSample(d.sample);
+
+    if (drumChanged)
+        drumChanged();
+}
+
+DrumType DrumSound::getDrumType() const
+{
+    return _drumType;
+}
+
+float DrumSound::getConfidence() const
+{
+    return _confidence;
+}
+
+
 /*template <int k>
 struct LagrangeResampleHelper
 {
