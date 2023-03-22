@@ -149,6 +149,35 @@ void Text2SampleAudioProcessor::drumifySample(int soundIndex, const juce::File& 
     getSound(soundIndex)->loadDrum(d);
 }
 
+void Text2SampleAudioProcessor::inpaintSample(int soundIndex, const juce::File& file, bool half)
+{
+    auto [inputData, fs] = Utils::readWavFile(file);
+
+    if (inputData.getNumSamples() == 0)
+        return;
+
+    inputData.setSize(UnetModelInference::numChannels, UnetModelInference::outputSize, true, true);
+
+    juce::AudioBuffer<float> outputData{ UnetModelInference::numChannels, UnetModelInference::outputSize };
+    size_t classification = 0;
+    float confidence = 0;
+
+    unetModelInference.processSeededInpainting(outputData.getWritePointer(0), inputData.getReadPointer(0), half);
+    classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
+
+    Utils::normalize(outputData);
+    outputData.applyGain(juce::Decibels::decibelsToGain(-3.0f));
+
+    // 0 = Kick, 1 = Hat, 2 = Snare
+    Drum d;
+    d.sample = new Sample{ std::move(outputData), UnetModelInference::sampleRate };
+    d.drumType = static_cast<DrumType>(classification);
+    d.confidence = confidence;
+
+    getSound(soundIndex)->loadDrum(d);
+}
+
+
 const juce::String Text2SampleAudioProcessor::getName() const
 {
     return JucePlugin_Name;

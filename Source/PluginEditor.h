@@ -22,6 +22,7 @@ private:
     juce::TextButton _generateButton;
     juce::TextButton _drumifyButton;
     juce::TextButton _inpaintButton;
+    juce::ToggleButton _inpaintSelector;
     
 	juce::TextButton _saveButton;
 	juce::TextButton _loadButton;

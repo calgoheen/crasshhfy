@@ -28,16 +28,16 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
         _chooser = std::make_unique<juce::FileChooser>("Load wav file", defaultPath, "*.wav");
         _chooser->launchAsync(flags, [this, idx](const juce::FileChooser& chooser) {
             auto f = chooser.getResult();
-            
+
             if (f == juce::File())
                 return;
 
 			if (idx < 0)
 				return;
-            
+
 			setButtonsEnabled(false);
-			juce::Thread::launch([this, idx, f] { 
-				_processor.drumifySample(idx, f); 
+			juce::Thread::launch([this, idx, f] {
+				_processor.drumifySample(idx, f);
 				juce::MessageManager::callAsync([this] { setButtonsEnabled(true); });
 			});
         });
@@ -46,7 +46,33 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 
 	// Inpaint sample
 	_inpaintButton.setButtonText("Variation");
+    _inpaintSelector.setButtonText("Start/End");
+    _inpaintButton.onClick = [this]
+    {
+        auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+        auto defaultPath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+        auto idx = _lastNoteIndex;
+
+        _chooser = std::make_unique<juce::FileChooser>("Load wav file", defaultPath, "*.wav");
+        _chooser->launchAsync(flags, [this, idx](const juce::FileChooser& chooser) {
+            auto f = chooser.getResult();
+
+            if (f == juce::File())
+                return;
+
+            if (idx < 0)
+                return;
+
+            setButtonsEnabled(false);
+            juce::Thread::launch([this, idx, f] {
+                _processor.inpaintSample(idx, f, _inpaintSelector.getToggleState());
+                juce::MessageManager::callAsync([this] { setButtonsEnabled(true); });
+            });
+        });
+
+    };
 	addAndMakeVisible(_inpaintButton);
+    addAndMakeVisible(_inpaintSelector);
 
 	// Save sample to file
 	_saveButton.setButtonText("Save Sample");
@@ -127,6 +153,7 @@ void Text2SampleAudioProcessorEditor::resized()
     _generateButton.setBounds(generateBounds);
 	_drumifyButton.setBounds(generateBounds.translated(buttonSectionWidth, 0));
 	_inpaintButton.setBounds(generateBounds.translated(2 * buttonSectionWidth, 0));
+    _inpaintSelector.setBounds(generateBounds.translated(2 * buttonSectionWidth, 30));
 
 	_keyboard->setBounds(mid);
 

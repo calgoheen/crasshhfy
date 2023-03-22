@@ -42,6 +42,7 @@ public:
 
     void generateSample(int soundIndex);
     void drumifySample(int soundIndex, const juce::File& file);
+    void inpaintSample(int soundIndex, const juce::File& file, bool half);
 
     const juce::String getName() const override;
     bool acceptsMidi() const override;

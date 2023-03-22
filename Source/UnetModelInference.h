@@ -42,6 +42,8 @@ public:
         mYScratch.resize(outputSize);
         mNoise.resize(outputSize);
         mSig.resize(nbSteps);
+        mInpaintScratch.resize(outputSize);
+
 
         mInputTensors.push_back(
                 Ort::Value::CreateTensor<float>(info, mXScratch.data(), mXScratch.size(), mInputShapes[0].data(),
@@ -53,8 +55,6 @@ public:
                 Ort::Value::CreateTensor<float>(info, mYScratch.data(), mYScratch.size(), mOutputShapes[0].data(),
                                                 mOutputShapes[0].size()));
 
-        // Prime onnxruntime, so that it doesn't allocate in the RT Thread
-        //RunInference();
     }
 
     void process(float *output) {
@@ -72,16 +72,19 @@ public:
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
-    void processSeededInpainting(float *output, float* seedAudio, bool paintHalf) {
-        // Audio Input
-        memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
-        RunInference();
+    void processSeededInpainting(float *output, const float* seedAudio, bool paintHalf) {
+        // Noise Input
+        for (size_t i = 0; i < outputSize; i++)
+            mXScratch[i] = d(mersenne_engine);
+        // Save seed to inpaint buffer
+        memcpy(mInpaintScratch.data(), seedAudio, outputSize);
+        RunInference(true, paintHalf);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
 
 private:
-    void RunInference() {
+    void RunInference(bool inpainting = false, bool paintHalf = 0) {
         // Initialize variables
         auto [s, m] = create_schedules();
         mSig = s;
@@ -111,6 +114,30 @@ private:
             // Next input is current input + scaled output + new noise
             for (size_t i = 0; i < outputSize; i++)
                 mXScratch[i] = (mMean[n - 1] / mMean[n]) * mXScratch[i] + scale * mYScratch[i] + mNoise[i];
+
+            // Inpainting
+            if (inpainting) {
+                size_t midPoint = outputSize / 2;
+                // Create noise
+                std::vector<float> noise;
+                noise.resize(outputSize);
+                for (size_t i = 0; i < outputSize; i++)
+                    noise[i] = d(mersenne_engine);
+                size_t start, end;
+                if (paintHalf) {
+                    // Replace second half
+                    start = midPoint;
+                    end = outputSize;
+                }
+                else {
+                    // Replace first half
+                    start = 0;
+                    end = midPoint;
+
+                }
+                for (size_t i = start; i<end; i++)
+                    mXScratch[i] = mMean[n] * mInpaintScratch[i] + mSig[n] * noise[i];
+            }
         }
 
         // Final run, output is subtraction of previous output and scaled final output
@@ -196,6 +223,7 @@ private:
     std::vector<float> mYScratch;       // audio output
     std::vector<float> mNoise;          // noise temp
     std::vector<double> sigVal = {0.0}; // sigma input
+    std::vector<float> mInpaintScratch;
 
     std::vector<Ort::Value> mInputTensors;
     std::vector<std::vector<int64_t>> mInputShapes;
