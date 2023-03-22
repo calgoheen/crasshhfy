@@ -155,7 +155,8 @@ void SampleKeyboard::updateSelectedNote()
 }
 
 
-ParameterView::ParameterView(SoundWithParameters* sound)
+ParameterView::ParameterView(SoundWithParameters* sound) 
+	: _cache(5), _thumbnail(512, _afm, _cache)
 {
 	const juce::StringArray paramNames = {
 		"Gain", "Pan", "Pitch",
@@ -171,14 +172,87 @@ ParameterView::ParameterView(SoundWithParameters* sound)
 		addAndMakeVisible(_labels[i]);
 		_labels[i].setText(paramNames[i], juce::dontSendNotification);
 	}
+
+	sound->sampleChanged = [=]
+	{
+		auto sample = sound->getSample();
+		if (sample != nullptr)
+		{
+			_thumbnail.setSource(&sample->data, sample->sampleRate, 0);
+			repaint();
+		}
+		else
+		{
+			_thumbnail.clear();
+			repaint();
+		}
+	};
+
+	_saveButton.setButtonText("Save");
+	_saveButton.onClick = [=]
+	{
+        auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
+        auto defaultPath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+
+        _chooser = std::make_unique<juce::FileChooser>("Save sample", defaultPath, "*.wav");
+        
+        _chooser->launchAsync(flags, [=](const juce::FileChooser& chooser) {
+            auto f = chooser.getResult();
+            
+            if (f == juce::File())
+                return;
+            
+			auto sample = sound->getSample();
+            if (sample != nullptr)
+        		Utils::writeWavFile(sample->data, sample->sampleRate, f);
+        });
+	};
+	addAndMakeVisible(_saveButton);
+
+	_clearButton.setButtonText("Clear");
+	_clearButton.onClick = [=]
+	{
+		if (auto drumSound = dynamic_cast<DrumSound*>(sound))
+			drumSound->loadDrum({});
+	};
+	addAndMakeVisible(_clearButton);
+}
+
+void ParameterView::paint(juce::Graphics& g)
+{
+	if (_thumbnail.getNumChannels() > 0)
+	{
+		g.setColour(juce::Colours::white);
+        g.fillRect(_thumbnailBounds);
+        g.setColour(juce::Colours::red);
+ 
+        _thumbnail.drawChannels(g,
+                                _thumbnailBounds,
+                                0.0,
+                                _thumbnail.getTotalLength(),
+                                1.0f);
+	}	
+	else
+	{
+        g.setColour(juce::Colours::white);
+        g.drawFittedText("No Sample Loaded", _thumbnailBounds, juce::Justification::centred, 1);
+	}
 }
 
 void ParameterView::resized()
 {
-	auto w = getWidth() / 4;
-	auto h = getHeight() / 2;
+	auto bounds = getLocalBounds();
+	_thumbnailBounds = bounds.removeFromLeft(getWidth() / 3);
 
-	auto top = getLocalBounds();
+	auto thumbnailButtonBounds = _thumbnailBounds;
+	thumbnailButtonBounds = thumbnailButtonBounds.removeFromRight(50);
+	_saveButton.setBounds(thumbnailButtonBounds.removeFromTop(20));
+	_clearButton.setBounds(thumbnailButtonBounds.removeFromTop(20));
+
+	auto w = bounds.getWidth() / 4;
+	auto h = bounds.getHeight() / 2;
+
+	auto top = bounds;
 	auto bottom = top.removeFromBottom(h);
 
 	top = top.withSizeKeepingCentre(3 * w, h);

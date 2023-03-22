@@ -18,7 +18,7 @@ public:
     void setSampleRate(double newRate);
     double getSampleRate() const;
 
-    void setSample(Sample::Ptr sample);
+    virtual void setSample(Sample::Ptr sample);
     Sample::Ptr getSample() const;
     const juce::AudioBuffer<float>& getSampleData() const;
     void clearSample();
@@ -78,6 +78,9 @@ public:
     ~SoundWithParameters() override = default;
 
     juce::RangedAudioParameter* getParameter(int index);
+    void setSample(Sample::Ptr sample) override;
+
+    std::function<void()> sampleChanged = nullptr;
 
 private:
     void initializeParameters();

@@ -69,12 +69,22 @@ public:
 	ParameterView(SoundWithParameters* sound);
 	~ParameterView() override = default;
 
+	void paint(juce::Graphics& g) override;
 	void resized() override;
 
 private:
 	std::array<juce::Slider, numParameters> _sliders;
 	std::array<std::unique_ptr<juce::SliderParameterAttachment>, numParameters> _attachments;
 	std::array<juce::Label, numParameters> _labels;
+
+	juce::AudioFormatManager _afm;
+	juce::AudioThumbnailCache _cache;
+	juce::AudioThumbnail _thumbnail;
+	juce::Rectangle<int> _thumbnailBounds;
+
+	juce::TextButton _clearButton;
+	juce::TextButton _saveButton;
+	std::unique_ptr<juce::FileChooser> _chooser;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterView)
 };

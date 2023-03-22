@@ -5,7 +5,7 @@
 struct Sample : public juce::ReferenceCountedObject
 {
     Sample(juce::AudioBuffer<float>&& sampleData, double sampleFs)
-      : data(std::move(sampleData)), sampleRate(sampleFs) {}
+    	: data(std::move(sampleData)), sampleRate(sampleFs) {}
 
     ~Sample() override = default;
     
@@ -19,14 +19,15 @@ struct Sample : public juce::ReferenceCountedObject
 
 enum class DrumType 
 {
-    kick = 0, 
-    snare, 
-    hat
+	none = 0,
+	kick, 
+	snare, 
+	hat
 };
 
 struct Drum 
 {
-	Sample::Ptr sample;
-	DrumType drumType;
-	float confidence;
+	Sample::Ptr sample{ nullptr };
+	DrumType drumType{ DrumType::none };
+	float confidence{ 0.0f };
 };

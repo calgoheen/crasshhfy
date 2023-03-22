@@ -23,8 +23,6 @@ double Sound::getSampleRate() const
 
 void Sound::setSample(Sample::Ptr sample)
 {
-    jassert(juce::isPositiveAndNotGreaterThan(sample->data.getNumChannels(), maxNumChannels));
-
     _source = sample;
     updateCurrentSample();
 }
@@ -116,7 +114,11 @@ bool Sound::appliesToChannel(int)
 void Sound::updateCurrentSample()
 {
     if (_source == nullptr)
+    {
+        _prev = _current;
+        _current = nullptr;
         return;
+    }
     
     if (!(_sampleRate > 0.0 && _source->sampleRate > 0.0))
         return;
@@ -152,6 +154,21 @@ juce::RangedAudioParameter* SoundWithParameters::getParameter(int index)
 {
     jassert(juce::isPositiveAndBelow(index, kNumParameters));
     return _parameters[index];
+}
+
+void SoundWithParameters::setSample(Sample::Ptr sample)
+{
+    Sound::setSample(sample);
+
+    if (sampleChanged)
+    {
+        auto mm = juce::MessageManager::getInstance();
+
+        if (mm->isThisTheMessageThread())
+            sampleChanged();
+        else
+            mm->callAsync([this] { sampleChanged(); });
+    }
 }
 
 void SoundWithParameters::initializeParameters()
@@ -195,7 +212,14 @@ void DrumSound::loadDrum(Drum d)
     setSample(d.sample);
 
     if (drumChanged)
-        juce::MessageManager::getInstance()->callAsync([this] { drumChanged(); });
+    {
+        auto mm = juce::MessageManager::getInstance();
+
+        if (mm->isThisTheMessageThread())
+            drumChanged();
+        else
+            mm->callAsync([this] { drumChanged(); });
+    }
 }
 
 DrumType DrumSound::getDrumType() const

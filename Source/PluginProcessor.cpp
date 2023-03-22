@@ -115,7 +115,7 @@ void Text2SampleAudioProcessor::generateSample(int soundIndex)
     // 0 = Kick, 1 = Hat, 2 = Snare
     Drum d;
     d.sample = new Sample{ std::move(data), UnetModelInference::sampleRate };
-    d.drumType = static_cast<DrumType>(classification);
+    d.drumType = static_cast<DrumType>(classification + 1);
     d.confidence = confidence;
 
     getSound(soundIndex)->loadDrum(d);
