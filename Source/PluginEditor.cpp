@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+
 Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), _processor(p)
 {
@@ -136,11 +137,12 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
 {
 	setLookAndFeel(nullptr);
+
 }
 
 void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
 {
-	g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+	g.fillAll(CustomLookAndFeel::Palette::background);
 }
 
 void Text2SampleAudioProcessorEditor::resized()
@@ -152,11 +154,11 @@ void Text2SampleAudioProcessorEditor::resized()
 	auto bottom = bounds;
 
 	auto buttonSectionWidth = top.getWidth() / 3;
-	auto generateBounds = top.removeFromLeft(buttonSectionWidth).withSizeKeepingCentre(80, 30);
+	auto generateBounds = top.removeFromLeft(buttonSectionWidth).withSizeKeepingCentre(100, 30);
     _generateButton.setBounds(generateBounds);
 	_drumifyButton.setBounds(generateBounds.translated(buttonSectionWidth, 0));
 	_inpaintButton.setBounds(generateBounds.translated(2 * buttonSectionWidth, 0));
-    _inpaintSelector.setBounds(generateBounds.translated(2 * buttonSectionWidth, 30));
+    _inpaintSelector.setBounds(generateBounds.translated(2 * buttonSectionWidth, 40));
 
 	_keyboard->setBounds(mid);
 
