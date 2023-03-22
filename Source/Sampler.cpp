@@ -176,7 +176,7 @@ void SoundWithParameters::initializeParameters()
     ParameterDefinition defs[kNumParameters] = {
         { "Gain",       "Gain",     "dB",   { -30.0f, 30.0f },              0.0f },
         { "Pan",        "Pan",      "%",    { -100.0f, 100.0f },            0.0f },
-        { "Pitch",      "Pitch",    "st",   { -12.0f, 12.0f },              0.0f },
+        { "Pitch",      "Pitch",    "st",   { -12.0f, 12.0f, 1.0f },        0.0f },
         { "Attack",     "Attack",   "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.01f },
         { "Decay",      "Decay",    "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.1f },
         { "Sustain",    "Sustain",  "%",    { 0.0f, 100.0f },               100.0f },
@@ -232,54 +232,6 @@ float DrumSound::getConfidence() const
     return _confidence;
 }
 
-
-/*template <int k>
-struct LagrangeResampleHelper
-{
-    static forcedinline void calc(float& a, float b) noexcept { a *= b * (1.0f / k); }
-};
-
-template <>
-struct LagrangeResampleHelper<0>
-{
-    static forcedinline void calc(float&, float) noexcept {}
-};
-
-template <int k>
-static float calcCoefficient(float input, float offset) noexcept
-{
-    LagrangeResampleHelper<0 - k>::calc(input, -2.0f - offset);
-    LagrangeResampleHelper<1 - k>::calc(input, -1.0f - offset);
-    LagrangeResampleHelper<2 - k>::calc(input, 0.0f - offset);
-    LagrangeResampleHelper<3 - k>::calc(input, 1.0f - offset);
-    LagrangeResampleHelper<4 - k>::calc(input, 2.0f - offset);
-    return input;
-}
-
-static float getFractionalSampleFromBuffer(const float* buffer, float readIdx)
-{
-    int idx0 = std::floor(readIdx);
-    int idx1 = idx0 - 1;
-    int idx2 = idx0 - 2;
-    int idx3 = idx0 - 3;
-    int idx4 = idx0 - 4;
-
-    float offset = readIdx - idx0;
-    
-    float x0 = idx4 < 0 ? 0.0f : buffer[idx4];
-    float x1 = idx3 < 0 ? 0.0f : buffer[idx4];
-    float x2 = idx2 < 0 ? 0.0f : buffer[idx4];
-    float x3 = idx1 < 0 ? 0.0f : buffer[idx4];
-    float x4 = idx0 < 0 ? 0.0f : buffer[idx4];
-
-    float result = 0.0f;
-
-    result += calcCoefficient<0>(x0, offset);
-    result += calcCoefficient<1>(x1, offset);
-    result += calcCoefficient<2>(x2, offset);
-    result += calcCoefficient<3>(x3, offset);
-    result += calcCoefficient<4>(x4, offset);
-}*/
 
 Voice::Voice()
 {
