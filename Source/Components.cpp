@@ -158,19 +158,45 @@ void SampleKeyboard::updateSelectedNote()
 ParameterView::ParameterView(SoundWithParameters* sound) 
 	: _cache(5), _thumbnail(512, _afm, _cache)
 {
+	// Set up sliders
+	auto initLinearSlider = [this](juce::Slider& s)
+	{
+		addAndMakeVisible(s);
+		s.setSliderStyle(juce::Slider::LinearVertical);
+		s.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+	};
+
+	auto initRotarySlider = [this](juce::Slider& s)
+	{
+		addAndMakeVisible(s);
+		s.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+		s.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+	};
+
+	using P = SoundWithParameters::Parameters;
+
+	initLinearSlider(_sliders[P::kAttack]);
+	initLinearSlider(_sliders[P::kDecay]);
+	initLinearSlider(_sliders[P::kSustain]);
+	initLinearSlider(_sliders[P::kRelease]);
+
+	initRotarySlider(_sliders[P::kGain]);
+	initRotarySlider(_sliders[P::kPan]);
+	initRotarySlider(_sliders[P::kPitch]);
+
+	// Set up labels and parameter attachments
 	const juce::StringArray paramNames = {
 		"Gain", "Pan", "Pitch",
-		"Attack", "Decay", "Sustain", "Release"
+		"A", "D", "S", "R"
 	};
 
 	for (int i = 0; i < numParameters; i++)
 	{
-		addAndMakeVisible(_sliders[i]);
-		_sliders[i].setSliderStyle(juce::Slider::RotaryVerticalDrag);
 		_attachments[i].reset(new juce::SliderParameterAttachment(*(sound->getParameter(i)), _sliders[i]));
 
 		addAndMakeVisible(_labels[i]);
 		_labels[i].setText(paramNames[i], juce::dontSendNotification);
+		_labels[i].setJustificationType(juce::Justification::centred);
 	}
 
 	sound->sampleChanged = [=]
@@ -220,12 +246,16 @@ ParameterView::ParameterView(SoundWithParameters* sound)
 
 void ParameterView::paint(juce::Graphics& g)
 {
+	if (auto laf = dynamic_cast<CustomLookAndFeel*>(&getLookAndFeel()))
+	{
+		laf->drawControlPanel(g, _thumbnailBounds);
+		laf->drawControlPanel(g, _adsrBounds);
+		laf->drawControlPanel(g, _knobBounds);
+	}
+
 	if (_thumbnail.getNumChannels() > 0)
 	{
-		g.setColour(juce::Colours::white);
-        g.fillRect(_thumbnailBounds);
-        g.setColour(juce::Colours::red);
- 
+        g.setColour(juce::Colours::lightgrey);
         _thumbnail.drawChannels(g,
                                 _thumbnailBounds,
                                 0.0,
@@ -241,15 +271,42 @@ void ParameterView::paint(juce::Graphics& g)
 
 void ParameterView::resized()
 {
+	static constexpr int pad = 4;
+
 	auto bounds = getLocalBounds();
-	_thumbnailBounds = bounds.removeFromLeft(getWidth() / 3);
+	auto panelWidth = getWidth() / 3;
+	_thumbnailBounds = bounds.removeFromLeft(panelWidth).reduced(pad);
+	_adsrBounds = bounds.removeFromLeft(panelWidth).reduced(pad);
+	_knobBounds = bounds.removeFromLeft(panelWidth).reduced(pad);
 
 	auto thumbnailButtonBounds = _thumbnailBounds;
 	thumbnailButtonBounds = thumbnailButtonBounds.removeFromRight(50);
 	_saveButton.setBounds(thumbnailButtonBounds.removeFromTop(20));
 	_clearButton.setBounds(thumbnailButtonBounds.removeFromTop(20));
 
-	auto w = bounds.getWidth() / 4;
+	auto adsrSliderWidth = _adsrBounds.getWidth() / 4;
+	auto adsrLabelHeight = _adsrBounds.getHeight() / 8;
+	auto adsrSliderBounds = _adsrBounds.withSizeKeepingCentre(adsrSliderWidth * 4, _adsrBounds.getHeight());
+	for (int i = SoundWithParameters::kAttack; i <= SoundWithParameters::kRelease; i++)
+	{
+		auto sliderBounds = adsrSliderBounds.removeFromLeft(adsrSliderWidth);
+		auto labelBounds = sliderBounds.removeFromBottom(adsrLabelHeight);
+		_sliders[i].setBounds(sliderBounds);
+		_labels[i].setBounds(labelBounds);
+	}
+
+	auto knobSliderWidth = _knobBounds.getWidth() / 3;
+	auto knobLabelHeight = _knobBounds.getHeight() / 8;
+	auto knobSliderBounds = _knobBounds.withSizeKeepingCentre(knobSliderWidth * 3, int(_knobBounds.getHeight() * 0.67f));
+	for (int i = SoundWithParameters::kGain; i <= SoundWithParameters::kPitch; i++)
+	{
+		auto sliderBounds = knobSliderBounds.removeFromLeft(knobSliderWidth).reduced(12, 0);
+		auto labelBounds = sliderBounds.removeFromBottom(knobLabelHeight);
+		_sliders[i].setBounds(sliderBounds);
+		_labels[i].setBounds(labelBounds);
+	}
+
+	/*auto w = bounds.getWidth() / 4;
 	auto h = bounds.getHeight() / 2;
 
 	auto top = bounds;
@@ -270,5 +327,5 @@ void ParameterView::resized()
 		setSliderBounds(i, top.removeFromLeft(w));
 
 	for (int i = 3; i < 7; i++)
-		setSliderBounds(i, bottom.removeFromLeft(w));
+		setSliderBounds(i, bottom.removeFromLeft(w));*/
 }

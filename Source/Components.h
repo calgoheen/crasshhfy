@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "Sampler.h"
+#include "LookAndFeel.h"
 
 class SamplePad : public juce::Component
 {
@@ -80,10 +81,10 @@ private:
 	juce::AudioFormatManager _afm;
 	juce::AudioThumbnailCache _cache;
 	juce::AudioThumbnail _thumbnail;
-	juce::Rectangle<int> _thumbnailBounds;
 
-	juce::TextButton _clearButton;
-	juce::TextButton _saveButton;
+	juce::Rectangle<int> _thumbnailBounds, _adsrBounds, _knobBounds;
+
+	juce::TextButton _clearButton, _saveButton;
 	std::unique_ptr<juce::FileChooser> _chooser;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterView)
