@@ -55,14 +55,14 @@ public:
         // Noise Input
         for (size_t i = 0; i < outputSize; i++)
             mXScratch[i] = d(mersenne_engine);
-        RunInference();
+        RunInference(numSteps);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
     void processSeeded(float *output, const float* seedAudio, size_t numSteps) {
         // Audio Input
         memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
-        RunInference();
+        RunInference(numSteps);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
@@ -72,13 +72,13 @@ public:
             mXScratch[i] = d(mersenne_engine);
         // Save seed to inpaint buffer
         memcpy(mInpaintScratch.data(), seedAudio, outputSize);
-        RunInference(true, paintHalf);
+        RunInference(numSteps,true, paintHalf);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
 
 private:
-    void RunInference(bool inpainting = false, bool paintHalf = 0, size_t numSteps = 10) {
+    void RunInference(size_t numSteps, bool inpainting = false, bool paintHalf = 0) {
         // Initialize variables
         auto [s, m] = create_schedules(numSteps);
         mSig = s;
