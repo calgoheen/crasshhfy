@@ -55,14 +55,14 @@ public:
         // Noise Input
         for (size_t i = 0; i < outputSize; i++)
             mXScratch[i] = d(mersenne_engine);
-        RunInference();
+        RunInference(numSteps);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
     void processSeeded(float *output, const float* seedAudio, size_t numSteps) {
         // Audio Input
         memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
-        RunInference();
+        RunInference(numSteps);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
@@ -72,13 +72,13 @@ public:
             mXScratch[i] = d(mersenne_engine);
         // Save seed to inpaint buffer
         memcpy(mInpaintScratch.data(), seedAudio, outputSize);
-        RunInference(true, paintHalf);
+        RunInference(numSteps,true, paintHalf);
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
 
 private:
-    void RunInference(bool inpainting = false, bool paintHalf = 0, size_t numSteps = 10) {
+    void RunInference(size_t numSteps, bool inpainting = false, bool paintHalf = 0) {
         // Initialize variables
         auto [s, m] = create_schedules(numSteps);
         mSig = s;
@@ -97,7 +97,7 @@ private:
         const char *outputNamesCstrs[] = {mOutputNames[0].c_str()};
 
         // Begin diffusion
-        for (size_t n = nbSteps - 1; n > 0; n--) {
+        for (size_t n = numSteps - 1; n > 0; n--) {
             sigVal = {static_cast<double>(mSig[n])};
             mSession->Run(mRunOptions, inputNamesCstrs, mInputTensors.data(), mInputTensors.size(), outputNamesCstrs,
                           mOutputTensors.data(), mOutputTensors.size());
@@ -197,7 +197,7 @@ private:
         return powf(powf(1.0f - sigma(t), 2.0f), 0.5f);
     }
 
-    std::tuple<std::vector<float>, std::vector<float>> create_schedules(int numSteps) {
+    std::tuple<std::vector<float>, std::vector<float>> create_schedules(size_t numSteps) {
         std::vector<float> tSchedule(numSteps + 1);
         std::vector<float> sigmaSchedule(numSteps + 1);
         std::vector<float> mSchedule(numSteps + 1);
@@ -241,5 +241,4 @@ private:
 
     float t_min = 0.007f;
     float t_max = 1.0f - 0.007f;
-    size_t nbSteps = 10;
 };
