@@ -16,13 +16,13 @@ void SamplePad::paint(juce::Graphics& g)
 	static constexpr float selectedThickness = 5.0f;
 
 	// Pad
-	auto col = _noteIsOn ? juce::Colours::lightpink : juce::Colours::lightgrey;
+	auto col = _noteIsOn ? CustomLookAndFeel::Palette::highlight : CustomLookAndFeel::Palette::light3;
 	g.setColour(col);
 	g.fillRoundedRectangle(getLocalBounds().toFloat(), corner);
 
 	if (_noteIsSelected)
 	{
-		g.setColour(juce::Colours::lightpink);
+		g.setColour(CustomLookAndFeel::Palette::highlight);
 		g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(selectedThickness / 2.0f), corner, selectedThickness);
 	}
 
@@ -30,7 +30,7 @@ void SamplePad::paint(juce::Graphics& g)
 	auto bounds = getLocalBounds();
 
 	// Note name
-	g.setColour(juce::Colours::black);
+	g.setColour(CustomLookAndFeel::Palette::background);
 	g.drawText(_noteName, 
 			   bounds.removeFromBottom(labelHeight).toFloat(), 
 			   juce::Justification::centred, 
@@ -38,7 +38,7 @@ void SamplePad::paint(juce::Graphics& g)
 
 	if (_label.isNotEmpty())
 	{
-		g.setColour(juce::Colours::black);
+		g.setColour(CustomLookAndFeel::Palette::background);
 		g.drawText(_label, 
 				   bounds.withSizeKeepingCentre(getWidth(), labelHeight), 
 				   juce::Justification::centred, 
@@ -255,7 +255,7 @@ void ParameterView::paint(juce::Graphics& g)
 
 	if (_thumbnail.getNumChannels() > 0)
 	{
-        g.setColour(juce::Colours::lightgrey);
+        g.setColour(CustomLookAndFeel::Palette::light2);
         _thumbnail.drawChannels(g,
                                 _thumbnailBounds,
                                 0.0,
@@ -264,7 +264,7 @@ void ParameterView::paint(juce::Graphics& g)
 	}	
 	else
 	{
-        g.setColour(juce::Colours::white);
+        g.setColour(CustomLookAndFeel::Palette::light1);
         g.drawFittedText("No Sample Loaded", _thumbnailBounds, juce::Justification::centred, 1);
 	}
 }
@@ -284,17 +284,20 @@ void ParameterView::resized()
 	_saveButton.setBounds(thumbnailButtonBounds.removeFromTop(20));
 	_clearButton.setBounds(thumbnailButtonBounds.removeFromTop(20));
 
+	// Envelope sliders
 	auto adsrSliderWidth = _adsrBounds.getWidth() / 4;
 	auto adsrLabelHeight = _adsrBounds.getHeight() / 8;
 	auto adsrSliderBounds = _adsrBounds.withSizeKeepingCentre(adsrSliderWidth * 4, _adsrBounds.getHeight());
 	for (int i = SoundWithParameters::kAttack; i <= SoundWithParameters::kRelease; i++)
 	{
 		auto sliderBounds = adsrSliderBounds.removeFromLeft(adsrSliderWidth);
+		sliderBounds.removeFromBottom(5);
 		auto labelBounds = sliderBounds.removeFromBottom(adsrLabelHeight);
 		_sliders[i].setBounds(sliderBounds);
 		_labels[i].setBounds(labelBounds);
 	}
 
+	// Gain, pan, pitch sliders
 	auto knobSliderWidth = _knobBounds.getWidth() / 3;
 	auto knobLabelHeight = _knobBounds.getHeight() / 8;
 	auto knobSliderBounds = _knobBounds.withSizeKeepingCentre(knobSliderWidth * 3, int(_knobBounds.getHeight() * 0.67f));
@@ -305,27 +308,4 @@ void ParameterView::resized()
 		_sliders[i].setBounds(sliderBounds);
 		_labels[i].setBounds(labelBounds);
 	}
-
-	/*auto w = bounds.getWidth() / 4;
-	auto h = bounds.getHeight() / 2;
-
-	auto top = bounds;
-	auto bottom = top.removeFromBottom(h);
-
-	top = top.withSizeKeepingCentre(3 * w, h);
-	bottom = bottom.withSizeKeepingCentre(4 * w, h);
-
-	const auto setSliderBounds = [this](int index, juce::Rectangle<int> bounds)
-	{
-		auto sliderHeight = bounds.getHeight() * 6 / 7;
-		_sliders[index].setBounds(bounds.removeFromTop(sliderHeight));
-		_sliders[index].setTextBoxStyle(juce::Slider::TextBoxBelow, true, bounds.getWidth(), bounds.getHeight());
-		_labels[index].setBounds(bounds);
-	};
-
-	for (int i = 0; i < 3; i++)
-		setSliderBounds(i, top.removeFromLeft(w));
-
-	for (int i = 3; i < 7; i++)
-		setSliderBounds(i, bottom.removeFromLeft(w));*/
 }

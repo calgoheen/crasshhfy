@@ -137,7 +137,6 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
 {
 	setLookAndFeel(nullptr);
-
 }
 
 void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
@@ -150,7 +149,7 @@ void Text2SampleAudioProcessorEditor::resized()
 	auto bounds = getLocalBounds();
 
 	auto top = bounds.removeFromTop(80);
-	auto mid = bounds.removeFromTop(160).reduced(10);
+	auto mid = bounds.removeFromTop(185).reduced(10);
 	auto bottom = bounds;
 
 	auto buttonSectionWidth = top.getWidth() / 3;

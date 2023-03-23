@@ -7,8 +7,11 @@ class CustomLookAndFeel : public juce::LookAndFeel_V4
 public:
     struct Palette
     {
-        static const juce::Colour text;
         static const juce::Colour background;
+        static const juce::Colour light1;
+        static const juce::Colour light2;
+        static const juce::Colour light3;
+        static const juce::Colour dark;
         static const juce::Colour highlight;
     };
 

@@ -1,7 +1,10 @@
 #include "LookAndFeel.h"
 
-const juce::Colour CustomLookAndFeel::Palette::text 		= juce::Colours::white;
-const juce::Colour CustomLookAndFeel::Palette::background 	= juce::Colour(37, 38, 41);
+const juce::Colour CustomLookAndFeel::Palette::background 	= { 37, 38, 41 };
+const juce::Colour CustomLookAndFeel::Palette::light1 		= juce::Colours::white;
+const juce::Colour CustomLookAndFeel::Palette::light2 		= { 174, 173, 174 };
+const juce::Colour CustomLookAndFeel::Palette::light3 		= juce::Colours::lightgrey;
+const juce::Colour CustomLookAndFeel::Palette::dark 		= Palette::light2.darker(0.8f);
 const juce::Colour CustomLookAndFeel::Palette::highlight 	= juce::Colours::pink;
 
 
@@ -24,7 +27,7 @@ CustomLookAndFeel::CustomLookAndFeel()
 void CustomLookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
                           				 bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
 {
-	auto textColour = Palette::text;
+	auto textColour = Palette::light1;
     auto backgroundColor = juce::Colour(59, 58, 56);
     auto selectedColor = juce::Colour(81, 145, 194);
     auto j = juce::Justification::centred;
@@ -130,8 +133,8 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int w,
 	static constexpr float stroke = 2.0f;
 	static constexpr float diameter = 8.0f;
 
-	auto pathColour = juce::Colours::lightgrey;
-	auto dotColour = juce::Colours::white;
+	auto pathColour = Palette::light2;
+	auto dotColour = Palette::light1;
 
 	auto bounds = juce::Rectangle<int>{ x, y, w, h }.toFloat();
 	auto startPoint = juce::Point<float>{ bounds.getCentreX(), bounds.getBottom() };
@@ -152,8 +155,8 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int w,
     auto bounds = juce::Rectangle<int>{ x, y, w, h }.toFloat();
     auto arcRadius = juce::jmin(w, h) / 2.0f - 2.0f;
 
-	auto bottomArcColour = juce::Colours::grey;
-	auto topArcColour = juce::Colours::white;
+	auto bottomArcColour = Palette::light2;
+	auto topArcColour = Palette::light1;
 	static constexpr float strokeSize = 2.0f;
 
     juce::Path bottomArc, topArc;
@@ -192,15 +195,11 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int w,
 void CustomLookAndFeel::drawControlPanel(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
 	static constexpr float corner = 5.0f;
-	static constexpr float stroke = 1.0f;
+	static constexpr float stroke = 2.0f;
 
 	auto floatBounds = bounds.toFloat();
-	auto backgroundColour = juce::Colours::darkgrey;
-	auto strokeColour = juce::Colours::lightgrey;
+	auto backgroundColour = Palette::light2.darker(0.8f);
 
 	g.setColour(backgroundColour);
 	g.fillRoundedRectangle(floatBounds, corner);
-
-	g.setColour(strokeColour);
-	g.drawRoundedRectangle(floatBounds, corner, stroke);
 }
