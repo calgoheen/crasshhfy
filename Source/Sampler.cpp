@@ -177,7 +177,7 @@ void SoundWithParameters::initializeParameters()
         { "Gain",       "Gain",     "dB",   { -30.0f, 30.0f },              0.0f },
         { "Pan",        "Pan",      "%",    { -100.0f, 100.0f },            0.0f },
         { "Pitch",      "Pitch",    "st",   { -12.0f, 12.0f, 1.0f },        0.0f },
-        { "Attack",     "Attack",   "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.01f },
+        { "Attack",     "Attack",   "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.001f },
         { "Decay",      "Decay",    "s",    { 0.001f, 1.0f, 0.0f, 0.25f },  0.1f },
         { "Sustain",    "Sustain",  "%",    { 0.0f, 100.0f },               100.0f },
         { "Release",    "Release",  "s",    { 0.001f, 10.0f, 0.0f, 0.25f }, 0.1f }
