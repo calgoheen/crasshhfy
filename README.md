@@ -3,7 +3,7 @@
 ## Clone the repo
 
 ```
-$ git clone https://github.com/cgo435/Crasshhfy.git --recurse-submodules
+$ git clone https://github.com/calgoheen/Crasshhfy.git --recurse-submodules
 ```
 
 ## Build the example model
