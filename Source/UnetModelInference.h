@@ -41,23 +41,17 @@ public:
         mXScratch.resize(outputSize);
         mYScratch.resize(outputSize);
         mNoise.resize(outputSize);
-        mSig.resize(nbSteps);
+
         mInpaintScratch.resize(outputSize);
 
 
-        mInputTensors.push_back(
-                Ort::Value::CreateTensor<float>(info, mXScratch.data(), mXScratch.size(), mInputShapes[0].data(),
-                                                mInputShapes[0].size()));
-        mInputTensors.push_back(
-                Ort::Value::CreateTensor<double>(info, sigVal.data(), sigVal.size(), mInputShapes[1].data(),
-                                                 mInputShapes[1].size()));
         mOutputTensors.push_back(
                 Ort::Value::CreateTensor<float>(info, mYScratch.data(), mYScratch.size(), mOutputShapes[0].data(),
                                                 mOutputShapes[0].size()));
 
     }
 
-    void process(float *output) {
+    void process(float *output, size_t numSteps) {
         // Noise Input
         for (size_t i = 0; i < outputSize; i++)
             mXScratch[i] = d(mersenne_engine);
@@ -65,14 +59,14 @@ public:
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
-    void processSeeded(float *output, const float* seedAudio) {
+    void processSeeded(float *output, const float* seedAudio, size_t numSteps) {
         // Audio Input
         memcpy(mXScratch.data(), seedAudio, outputSize * sizeof (float));
         RunInference();
         memcpy(output, mYScratch.data(), outputSize * sizeof(float));
     }
 
-    void processSeededInpainting(float *output, const float* seedAudio, bool paintHalf) {
+    void processSeededInpainting(float *output, const float* seedAudio, bool paintHalf, size_t numSteps) {
         // Noise Input
         for (size_t i = 0; i < outputSize; i++)
             mXScratch[i] = d(mersenne_engine);
@@ -84,12 +78,20 @@ public:
 
 
 private:
-    void RunInference(bool inpainting = false, bool paintHalf = 0) {
+    void RunInference(bool inpainting = false, bool paintHalf = 0, size_t numSteps = 10) {
         // Initialize variables
-        auto [s, m] = create_schedules();
+        auto [s, m] = create_schedules(numSteps);
         mSig = s;
         mMean = m;
         std::fill(mYScratch.begin(), mYScratch.end(), 0.0f);
+
+        mInputTensors.clear();
+        mInputTensors.push_back(
+                Ort::Value::CreateTensor<float>(info, mXScratch.data(), mXScratch.size(), mInputShapes[0].data(),
+                                                mInputShapes[0].size()));
+        mInputTensors.push_back(
+                Ort::Value::CreateTensor<double>(info, sigVal.data(), sigVal.size(), mInputShapes[1].data(),
+                                                 mInputShapes[1].size()));
 
         const char *inputNamesCstrs[] = {mInputNames[0].c_str(), mInputNames[1].c_str()};
         const char *outputNamesCstrs[] = {mOutputNames[0].c_str()};
@@ -195,17 +197,17 @@ private:
         return powf(powf(1.0f - sigma(t), 2.0f), 0.5f);
     }
 
-    std::tuple<std::vector<float>, std::vector<float>> create_schedules() {
-        std::vector<float> tSchedule(nbSteps + 1);
-        std::vector<float> sigmaSchedule(nbSteps + 1);
-        std::vector<float> mSchedule(nbSteps + 1);
-        for (std::size_t i = 0; i < nbSteps + 1; i++) {
-            tSchedule[i] = (t_max - t_min) * float(i) / float(nbSteps) + t_min;
+    std::tuple<std::vector<float>, std::vector<float>> create_schedules(int numSteps) {
+        std::vector<float> tSchedule(numSteps + 1);
+        std::vector<float> sigmaSchedule(numSteps + 1);
+        std::vector<float> mSchedule(numSteps + 1);
+        for (std::size_t i = 0; i < numSteps + 1; i++) {
+            tSchedule[i] = (t_max - t_min) * float(i) / float(numSteps) + t_min;
         }
-        for (std::size_t i = 0; i < nbSteps + 1; i++) {
+        for (std::size_t i = 0; i < numSteps + 1; i++) {
             sigmaSchedule[i] = sigma(tSchedule[i]);
         }
-        for (std::size_t i = 0; i < nbSteps + 1; i++) {
+        for (std::size_t i = 0; i < numSteps + 1; i++) {
             mSchedule[i] = mean(tSchedule[i]);
         }
         return {sigmaSchedule, mSchedule};

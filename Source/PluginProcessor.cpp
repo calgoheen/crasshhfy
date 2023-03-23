@@ -104,7 +104,7 @@ void CrasshhfyAudioProcessor::generateSample(int soundIndex)
     size_t classification = 0;
     float confidence = 0;
 
-    unetModelInference.process(data.getWritePointer(0));
+    unetModelInference.process(data.getWritePointer(0), 10);
     classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
 
     Utils::normalize(data);
@@ -134,7 +134,7 @@ void CrasshhfyAudioProcessor::drumifySample(int soundIndex, const juce::File& fi
 
     Utils::normalize(inputData);
 
-    unetModelInference.processSeeded(outputData.getWritePointer(0), inputData.getReadPointer(0));
+    unetModelInference.processSeeded(outputData.getWritePointer(0), inputData.getReadPointer(0), 10);
     classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
 
     Utils::normalize(outputData);
@@ -164,7 +164,7 @@ void CrasshhfyAudioProcessor::inpaintSample(int soundIndex, const juce::File& fi
 
     Utils::normalize(inputData);
 
-    unetModelInference.processSeededInpainting(outputData.getWritePointer(0), inputData.getReadPointer(0), half);
+    unetModelInference.processSeededInpainting(outputData.getWritePointer(0), inputData.getReadPointer(0), half, 10);
     classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
 
     Utils::normalize(outputData);
@@ -250,7 +250,7 @@ Drum CrasshhfyAudioProcessor::renderCRASHSample()
     size_t classification = 0;
     float confidence = 0;
 
-    unetModelInference.process(data.getWritePointer(0));
+    unetModelInference.process(data.getWritePointer(0), 10);
     classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
     
     // 0 = Kick, 1 = Hat, 2 = Snare
