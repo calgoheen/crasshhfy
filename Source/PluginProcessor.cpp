@@ -54,8 +54,6 @@ void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     buffer.clear();
     _synth.renderNextBlock(buffer, midi, 0, buffer.getNumSamples());
 
-    Limiter limit{ buffer };
-
     midi.clear();
 }
 

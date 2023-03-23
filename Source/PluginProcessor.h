@@ -6,16 +6,6 @@
 #include "UnetModelInference.h"
 #include "ClassifierModelInference.h"
 
-struct Limiter
-{
-    Limiter(juce::AudioBuffer<float>& data)
-    {
-        for (int i = 0; i < data.getNumSamples(); i++)
-            for (int j = 0; j < data.getNumChannels(); j++)
-                data.setSample(j, i, juce::jlimit(-1.0f, 1.0f, data.getSample(j, i)));
-    }
-};
-
 class Text2SampleAudioProcessor : public juce::AudioProcessor
 {
 public:
