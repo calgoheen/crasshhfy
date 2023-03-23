@@ -5,7 +5,8 @@ const juce::Colour CustomLookAndFeel::Palette::light1 		= juce::Colours::white;
 const juce::Colour CustomLookAndFeel::Palette::light2 		= { 174, 173, 174 };
 const juce::Colour CustomLookAndFeel::Palette::light3 		= juce::Colours::lightgrey;
 const juce::Colour CustomLookAndFeel::Palette::dark 		= Palette::light2.darker(0.8f);
-const juce::Colour CustomLookAndFeel::Palette::highlight 	= juce::Colours::pink;
+const juce::Colour CustomLookAndFeel::Palette::highlight1 	= juce::Colours::pink;
+const juce::Colour CustomLookAndFeel::Palette::highlight2 	= { 95, 143, 190 };
 
 
 const juce::Font& CustomLookAndFeel::getFont()

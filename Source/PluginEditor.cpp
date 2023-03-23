@@ -125,7 +125,10 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 				case DrumType::hat: 	label = "Hat"; 		break;
 			};
 
-			_keyboard->setNoteLabel(i, label);
+			auto baseColour = juce::Colours::red.darker();
+			static constexpr float shiftToGreen = 0.33f;
+			auto col = baseColour.withRotatedHue(shiftToGreen * s->getConfidence());
+			_keyboard->setNoteLabel(i, label, col);
 		};
 		s->drumChanged();
 	}
@@ -143,6 +146,7 @@ Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
 void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
 {
 	g.fillAll(CustomLookAndFeel::Palette::background);
+	g.drawImageAt(_logo, _logoBounds.getX(), _logoBounds.getY());
 }
 
 void Text2SampleAudioProcessorEditor::resized()
@@ -152,6 +156,9 @@ void Text2SampleAudioProcessorEditor::resized()
 	auto top = bounds.removeFromTop(80);
 	auto mid = bounds.removeFromTop(185).reduced(10);
 	auto bottom = bounds;
+
+	_logoBounds = top.removeFromLeft(120);
+	_logo = juce::ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize).rescaled(120, 120);
 
 	auto buttonSectionWidth = top.getWidth() / 3;
 	auto generateBounds = top.removeFromLeft(buttonSectionWidth).withSizeKeepingCentre(100, 30);

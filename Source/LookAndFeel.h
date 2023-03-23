@@ -12,7 +12,8 @@ public:
         static const juce::Colour light2;
         static const juce::Colour light3;
         static const juce::Colour dark;
-        static const juce::Colour highlight;
+        static const juce::Colour highlight1;
+        static const juce::Colour highlight2;
     };
 
     static const juce::Font& getFont();

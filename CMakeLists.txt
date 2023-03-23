@@ -56,7 +56,7 @@ target_sources(${PROJECT_NAME}
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "" FILES ${SourceFiles})
 
-juce_add_binary_data(Assets SOURCES "Assets/wave.svg")
+juce_add_binary_data(Assets SOURCES "Assets/logo.png")
 set_target_properties(Assets 
     PROPERTIES 
         POSITION_INDEPENDENT_CODE TRUE 

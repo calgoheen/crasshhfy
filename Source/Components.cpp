@@ -13,21 +13,23 @@ int SamplePad::getMidiNote() const
 void SamplePad::paint(juce::Graphics& g)
 {
 	static constexpr float corner = 2.0f;
-	static constexpr float selectedThickness = 5.0f;
+
+	auto bounds = getLocalBounds().reduced(3);
 
 	// Pad
-	auto col = _noteIsOn ? CustomLookAndFeel::Palette::highlight : CustomLookAndFeel::Palette::light3;
+	auto col = _noteIsOn ? CustomLookAndFeel::Palette::highlight1 : CustomLookAndFeel::Palette::light3;
 	g.setColour(col);
-	g.fillRoundedRectangle(getLocalBounds().toFloat(), corner);
+	g.fillRoundedRectangle(bounds.toFloat(), corner);
 
 	if (_noteIsSelected)
 	{
-		g.setColour(CustomLookAndFeel::Palette::highlight);
-		g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(selectedThickness / 2.0f), corner, selectedThickness);
+		float stroke = 3.0f;
+		auto strokeBounds = bounds.toFloat().expanded(1.25f);
+		g.setColour(CustomLookAndFeel::Palette::highlight2);
+		g.drawRoundedRectangle(strokeBounds, corner, stroke);
 	}
 
 	auto labelHeight = getHeight() / 5;
-	auto bounds = getLocalBounds();
 
 	// Note name
 	g.setColour(CustomLookAndFeel::Palette::background);
@@ -38,7 +40,7 @@ void SamplePad::paint(juce::Graphics& g)
 
 	if (_label.isNotEmpty())
 	{
-		g.setColour(CustomLookAndFeel::Palette::background);
+		g.setColour(_labelColour);
 		g.drawText(_label, 
 				   bounds.withSizeKeepingCentre(getWidth(), labelHeight), 
 				   juce::Justification::centred, 
@@ -64,9 +66,10 @@ void SamplePad::setNoteSelected(bool isSelected)
 	}
 }
 
-void SamplePad::setLabel(const juce::String& label)
+void SamplePad::setLabel(const juce::String& label, const juce::Colour& col)
 {
 	_label = label;
+	_labelColour = col;
 	repaint();
 }
 
@@ -109,10 +112,10 @@ void SampleKeyboard::setSelectedNote(int idx)
 	}
 }
 
-void SampleKeyboard::setNoteLabel(int idx, const juce::String& label)
+void SampleKeyboard::setNoteLabel(int idx, const juce::String& label, const juce::Colour& col)
 {
 	jassert(juce::isPositiveAndBelow(idx, _notes.size()));
-	_notes[idx]->setLabel(label);
+	_notes[idx]->setLabel(label, col);
 }
 
 void SampleKeyboard::timerCallback()

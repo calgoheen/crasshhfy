@@ -37,5 +37,8 @@ private:
 
 	std::unique_ptr<juce::FileChooser> _chooser;
 
+    juce::Rectangle<int> _logoBounds;
+    juce::Image _logo;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Text2SampleAudioProcessorEditor)
 };

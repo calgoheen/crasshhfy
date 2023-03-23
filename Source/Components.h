@@ -15,13 +15,14 @@ public:
 	int getMidiNote() const;
 	void setNoteOn(bool noteIsOn);
 	void setNoteSelected(bool isSelected);
-	void setLabel(const juce::String& label);
+	void setLabel(const juce::String& label, const juce::Colour& col);
 
 private:
 	const int _midiNote;
 
 	juce::String _noteName;
 	juce::String _label{ "" };
+	juce::Colour _labelColour;
 	bool _noteIsOn{ false };
 	bool _noteIsSelected{ false };
 
@@ -40,7 +41,7 @@ public:
 
 	void resized() override;
 	void setSelectedNote(int idx);
-	void setNoteLabel(int idx, const juce::String& label);
+	void setNoteLabel(int idx, const juce::String& label, const juce::Colour& col);
 
 	std::function<void(int)> onSelectedNoteChange{ nullptr };
 
