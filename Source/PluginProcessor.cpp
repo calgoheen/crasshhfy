@@ -134,6 +134,8 @@ void Text2SampleAudioProcessor::drumifySample(int soundIndex, const juce::File& 
     size_t classification = 0;
     float confidence = 0;
 
+    Utils::normalize(inputData);
+
     unetModelInference.processSeeded(outputData.getWritePointer(0), inputData.getReadPointer(0));
     classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
 
@@ -162,6 +164,8 @@ void Text2SampleAudioProcessor::inpaintSample(int soundIndex, const juce::File& 
     size_t classification = 0;
     float confidence = 0;
 
+    Utils::normalize(inputData);
+
     unetModelInference.processSeededInpainting(outputData.getWritePointer(0), inputData.getReadPointer(0), half);
     classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
 
@@ -176,7 +180,6 @@ void Text2SampleAudioProcessor::inpaintSample(int soundIndex, const juce::File& 
 
     getSound(soundIndex)->loadDrum(d);
 }
-
 
 const juce::String Text2SampleAudioProcessor::getName() const
 {
