@@ -5,11 +5,11 @@
 #include "LookAndFeel.h"
 #include "Components.h"
 
-class Text2SampleAudioProcessorEditor  : public juce::AudioProcessorEditor
+class CrasshhfyAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    Text2SampleAudioProcessorEditor (Text2SampleAudioProcessor&);
-    ~Text2SampleAudioProcessorEditor() override;
+    CrasshhfyAudioProcessorEditor (CrasshhfyAudioProcessor&);
+    ~CrasshhfyAudioProcessorEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -18,7 +18,7 @@ private:
 	void updateParameterView();
     void setButtonsEnabled(bool enabled);
 
-    Text2SampleAudioProcessor& _processor;
+    CrasshhfyAudioProcessor& _processor;
 
     CustomLookAndFeel _laf;
 
@@ -40,5 +40,5 @@ private:
     juce::Rectangle<int> _logoBounds;
     juce::Image _logo;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Text2SampleAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CrasshhfyAudioProcessorEditor)
 };

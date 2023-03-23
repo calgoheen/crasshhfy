@@ -1,9 +1,9 @@
-# Text2Sample
+# Crasshhfy
 
 ## Clone the repo
 
 ```
-$ git clone https://github.com/cgo435/Text2Sample.git --recurse-submodules
+$ git clone https://github.com/cgo435/Crasshhfy.git --recurse-submodules
 ```
 
 ## Build the example model

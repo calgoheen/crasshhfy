@@ -2,7 +2,7 @@
 #include "PluginEditor.h"
 
 
-Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudioProcessor& p)
+CrasshhfyAudioProcessorEditor::CrasshhfyAudioProcessorEditor(CrasshhfyAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), _processor(p)
 {
 	setLookAndFeel(&_laf);
@@ -138,18 +138,18 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
     setSize(600, 400);
 }
 
-Text2SampleAudioProcessorEditor::~Text2SampleAudioProcessorEditor()
+CrasshhfyAudioProcessorEditor::~CrasshhfyAudioProcessorEditor()
 {
 	setLookAndFeel(nullptr);
 }
 
-void Text2SampleAudioProcessorEditor::paint(juce::Graphics& g)
+void CrasshhfyAudioProcessorEditor::paint(juce::Graphics& g)
 {
 	g.fillAll(CustomLookAndFeel::Palette::background);
 	g.drawImageAt(_logo, _logoBounds.getX(), _logoBounds.getY());
 }
 
-void Text2SampleAudioProcessorEditor::resized()
+void CrasshhfyAudioProcessorEditor::resized()
 {
 	auto bounds = getLocalBounds();
 
@@ -173,13 +173,13 @@ void Text2SampleAudioProcessorEditor::resized()
 		view->setBounds(bottom);
 }
 
-void Text2SampleAudioProcessorEditor::updateParameterView()
+void CrasshhfyAudioProcessorEditor::updateParameterView()
 {
 	for (int i = 0; i < _parameterViews.size(); i++)
 		_parameterViews[i]->setVisible(i == _lastNoteIndex);
 }
 
-void Text2SampleAudioProcessorEditor::setButtonsEnabled(bool enabled)
+void CrasshhfyAudioProcessorEditor::setButtonsEnabled(bool enabled)
 {
 	_generateButton.setEnabled(enabled);
 	_drumifyButton.setEnabled(enabled);

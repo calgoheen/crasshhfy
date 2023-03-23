@@ -6,15 +6,15 @@
 #include "UnetModelInference.h"
 #include "ClassifierModelInference.h"
 
-class Text2SampleAudioProcessor : public juce::AudioProcessor
+class CrasshhfyAudioProcessor : public juce::AudioProcessor
 {
 public:
     const int numSounds = 4;
     const int numVoices = 8;
     const int baseMidiNote = 60;
 
-    Text2SampleAudioProcessor();
-    ~Text2SampleAudioProcessor() override;
+    CrasshhfyAudioProcessor();
+    ~CrasshhfyAudioProcessor() override;
 
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -60,5 +60,5 @@ private:
 
     juce::MidiKeyboardState _midiState;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Text2SampleAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CrasshhfyAudioProcessor)
 };

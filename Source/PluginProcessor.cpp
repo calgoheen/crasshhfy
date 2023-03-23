@@ -1,7 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-Text2SampleAudioProcessor::Text2SampleAudioProcessor()
+CrasshhfyAudioProcessor::CrasshhfyAudioProcessor()
   : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
     _parameters(*this, nullptr, "PARAMS", createParameterLayout())
 {
@@ -20,11 +20,11 @@ Text2SampleAudioProcessor::Text2SampleAudioProcessor()
     }
 }
 
-Text2SampleAudioProcessor::~Text2SampleAudioProcessor()
+CrasshhfyAudioProcessor::~CrasshhfyAudioProcessor()
 {
 }
 
-bool Text2SampleAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool CrasshhfyAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
@@ -32,7 +32,7 @@ bool Text2SampleAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout
     return true;
 }
 
-void Text2SampleAudioProcessor::prepareToPlay(double sampleRate, int)
+void CrasshhfyAudioProcessor::prepareToPlay(double sampleRate, int)
 {
     // Unused functionality but the Synthesiser class requires a real sample rate value
     _synth.setCurrentPlaybackSampleRate(sampleRate);
@@ -45,7 +45,7 @@ void Text2SampleAudioProcessor::prepareToPlay(double sampleRate, int)
     _midiState.reset();
 }
 
-void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+void CrasshhfyAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -57,40 +57,40 @@ void Text2SampleAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     midi.clear();
 }
 
-void Text2SampleAudioProcessor::releaseResources()
+void CrasshhfyAudioProcessor::releaseResources()
 {
 }
 
-void Text2SampleAudioProcessor::getStateInformation (juce::MemoryBlock&)
+void CrasshhfyAudioProcessor::getStateInformation (juce::MemoryBlock&)
 {
 }
 
-void Text2SampleAudioProcessor::setStateInformation (const void*, int)
+void CrasshhfyAudioProcessor::setStateInformation (const void*, int)
 {
 }
 
-bool Text2SampleAudioProcessor::hasEditor() const
+bool CrasshhfyAudioProcessor::hasEditor() const
 {
     return true;
 }
 
-juce::AudioProcessorEditor* Text2SampleAudioProcessor::createEditor()
+juce::AudioProcessorEditor* CrasshhfyAudioProcessor::createEditor()
 {
-    return new Text2SampleAudioProcessorEditor (*this);
+    return new CrasshhfyAudioProcessorEditor (*this);
 }
 
-juce::MidiKeyboardState& Text2SampleAudioProcessor::getMidiKeyboardState()
+juce::MidiKeyboardState& CrasshhfyAudioProcessor::getMidiKeyboardState()
 {
     return _midiState;
 }
 
-DrumSound* Text2SampleAudioProcessor::getSound(int soundIndex)
+DrumSound* CrasshhfyAudioProcessor::getSound(int soundIndex)
 {
     jassert(juce::isPositiveAndBelow(soundIndex, _sounds.size()));
     return _sounds[soundIndex];
 }
 
-void Text2SampleAudioProcessor::saveSample(int soundIndex, const juce::File& file)
+void CrasshhfyAudioProcessor::saveSample(int soundIndex, const juce::File& file)
 {
     auto sample = getSound(soundIndex)->getSample();
 
@@ -98,7 +98,7 @@ void Text2SampleAudioProcessor::saveSample(int soundIndex, const juce::File& fil
         Utils::writeWavFile(sample->data, sample->sampleRate, file);
 }
 
-void Text2SampleAudioProcessor::generateSample(int soundIndex)
+void CrasshhfyAudioProcessor::generateSample(int soundIndex)
 {
     juce::AudioBuffer<float> data{ UnetModelInference::numChannels, UnetModelInference::outputSize };
     size_t classification = 0;
@@ -119,7 +119,7 @@ void Text2SampleAudioProcessor::generateSample(int soundIndex)
     getSound(soundIndex)->loadDrum(d);
 }
 
-void Text2SampleAudioProcessor::drumifySample(int soundIndex, const juce::File& file)
+void CrasshhfyAudioProcessor::drumifySample(int soundIndex, const juce::File& file)
 {
     auto [inputData, fs] = Utils::readWavFile(file);
 
@@ -149,7 +149,7 @@ void Text2SampleAudioProcessor::drumifySample(int soundIndex, const juce::File& 
     getSound(soundIndex)->loadDrum(d);
 }
 
-void Text2SampleAudioProcessor::inpaintSample(int soundIndex, const juce::File& file, bool half)
+void CrasshhfyAudioProcessor::inpaintSample(int soundIndex, const juce::File& file, bool half)
 {
     auto [inputData, fs] = Utils::readWavFile(file);
 
@@ -179,55 +179,55 @@ void Text2SampleAudioProcessor::inpaintSample(int soundIndex, const juce::File& 
     getSound(soundIndex)->loadDrum(d);
 }
 
-const juce::String Text2SampleAudioProcessor::getName() const
+const juce::String CrasshhfyAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool Text2SampleAudioProcessor::acceptsMidi() const
+bool CrasshhfyAudioProcessor::acceptsMidi() const
 {
     return true;
 }
 
-bool Text2SampleAudioProcessor::producesMidi() const
+bool CrasshhfyAudioProcessor::producesMidi() const
 {
     return false;
 }
 
-bool Text2SampleAudioProcessor::isMidiEffect() const
+bool CrasshhfyAudioProcessor::isMidiEffect() const
 {
     return false;
 }
 
-double Text2SampleAudioProcessor::getTailLengthSeconds() const
+double CrasshhfyAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int Text2SampleAudioProcessor::getNumPrograms()
+int CrasshhfyAudioProcessor::getNumPrograms()
 {
     return 1;
 }
 
-int Text2SampleAudioProcessor::getCurrentProgram()
+int CrasshhfyAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void Text2SampleAudioProcessor::setCurrentProgram(int)
+void CrasshhfyAudioProcessor::setCurrentProgram(int)
 {
 }
 
-const juce::String Text2SampleAudioProcessor::getProgramName(int)
+const juce::String CrasshhfyAudioProcessor::getProgramName(int)
 {
     return {};
 }
 
-void Text2SampleAudioProcessor::changeProgramName(int, const juce::String&)
+void CrasshhfyAudioProcessor::changeProgramName(int, const juce::String&)
 {
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout Text2SampleAudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout CrasshhfyAudioProcessor::createParameterLayout()
 {
     std::vector<ParameterDefinition> definitions = {
         { "Gain", "Gain", "", { 0.0f, 1.0f }, 0.5f }
@@ -244,7 +244,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Text2SampleAudioProcessor::c
     return { params.begin(), params.end() };
 }
 
-Drum Text2SampleAudioProcessor::renderCRASHSample()
+Drum CrasshhfyAudioProcessor::renderCRASHSample()
 {
     juce::AudioBuffer<float> data{ UnetModelInference::numChannels, UnetModelInference::outputSize };
     size_t classification = 0;
@@ -264,5 +264,5 @@ Drum Text2SampleAudioProcessor::renderCRASHSample()
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new Text2SampleAudioProcessor();
+    return new CrasshhfyAudioProcessor();
 }
