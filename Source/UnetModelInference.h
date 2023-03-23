@@ -125,15 +125,14 @@ private:
                     noise[i] = d(mersenne_engine);
                 size_t start, end;
                 if (paintHalf) {
-                    // Replace second half
-                    start = midPoint;
-                    end = outputSize;
-                }
-                else {
                     // Replace first half
                     start = 0;
                     end = midPoint;
-
+                }
+                else {
+                    // Replace second half
+                    start = midPoint;
+                    end = outputSize;
                 }
                 for (size_t i = start; i<end; i++)
                     mXScratch[i] = mMean[n] * mInpaintScratch[i] + mSig[n] * noise[i];
