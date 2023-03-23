@@ -105,7 +105,7 @@ public:
     float getConfidence() const;
 
 private:
-    DrumType _drumType{ DrumType::kick };
+    DrumType _drumType{ DrumType::none };
     float _confidence{ 0.0f };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DrumSound)

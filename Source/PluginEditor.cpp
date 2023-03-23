@@ -127,6 +127,7 @@ Text2SampleAudioProcessorEditor::Text2SampleAudioProcessorEditor(Text2SampleAudi
 
 			_keyboard->setNoteLabel(i, label);
 		};
+		s->drumChanged();
 	}
 	
 	updateParameterView();

@@ -199,21 +199,6 @@ ParameterView::ParameterView(SoundWithParameters* sound)
 		_labels[i].setJustificationType(juce::Justification::centred);
 	}
 
-	sound->sampleChanged = [=]
-	{
-		auto sample = sound->getSample();
-		if (sample != nullptr)
-		{
-			_thumbnail.setSource(&sample->data, sample->sampleRate, 0);
-			repaint();
-		}
-		else
-		{
-			_thumbnail.clear();
-			repaint();
-		}
-	};
-
 	_saveButton.setButtonText("Save");
 	_saveButton.onClick = [=]
 	{
@@ -242,6 +227,26 @@ ParameterView::ParameterView(SoundWithParameters* sound)
 			drumSound->loadDrum({});
 	};
 	addAndMakeVisible(_clearButton);
+
+	sound->sampleChanged = [=]
+	{
+		auto sample = sound->getSample();
+		if (sample != nullptr)
+		{
+			_saveButton.setVisible(true);
+			_clearButton.setVisible(true);
+			_thumbnail.setSource(&sample->data, sample->sampleRate, 0);
+			repaint();
+		}
+		else
+		{
+			_saveButton.setVisible(false);
+			_clearButton.setVisible(false);
+			_thumbnail.clear();
+			repaint();
+		}
+	};
+	sound->sampleChanged();
 }
 
 void ParameterView::paint(juce::Graphics& g)
@@ -255,7 +260,7 @@ void ParameterView::paint(juce::Graphics& g)
 
 	if (_thumbnail.getNumChannels() > 0)
 	{
-        g.setColour(CustomLookAndFeel::Palette::light2);
+        g.setColour(CustomLookAndFeel::Palette::light1);
         _thumbnail.drawChannels(g,
                                 _thumbnailBounds,
                                 0.0,
