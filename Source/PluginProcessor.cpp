@@ -104,7 +104,7 @@ void CrasshhfyAudioProcessor::generateSample(int soundIndex)
     size_t classification = 0;
     float confidence = 0;
 
-    unetModelInference.process(data.getWritePointer(0), 10);
+    unetModelInference.process(data.getWritePointer(0), _numSteps);
     classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
 
     Utils::normalize(data);
@@ -134,7 +134,7 @@ void CrasshhfyAudioProcessor::drumifySample(int soundIndex, const juce::File& fi
 
     Utils::normalize(inputData);
 
-    unetModelInference.processSeeded(outputData.getWritePointer(0), inputData.getReadPointer(0), 10);
+    unetModelInference.processSeeded(outputData.getWritePointer(0), inputData.getReadPointer(0), _numSteps);
     classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
 
     Utils::normalize(outputData);
@@ -164,7 +164,7 @@ void CrasshhfyAudioProcessor::inpaintSample(int soundIndex, const juce::File& fi
 
     Utils::normalize(inputData);
 
-    unetModelInference.processSeededInpainting(outputData.getWritePointer(0), inputData.getReadPointer(0), half, 10);
+    unetModelInference.processSeededInpainting(outputData.getWritePointer(0), inputData.getReadPointer(0), half, _numSteps);
     classifierModelInference.process(outputData.getReadPointer(0), &classification, &confidence);
 
     Utils::normalize(outputData);
@@ -177,6 +177,16 @@ void CrasshhfyAudioProcessor::inpaintSample(int soundIndex, const juce::File& fi
     d.confidence = confidence;
 
     getSound(soundIndex)->loadDrum(d);
+}
+
+void CrasshhfyAudioProcessor::setNumSteps(int numSteps)
+{
+    _numSteps = numSteps;
+}
+
+int CrasshhfyAudioProcessor::getNumSteps() const
+{
+    return _numSteps;
 }
 
 const juce::String CrasshhfyAudioProcessor::getName() const
@@ -242,24 +252,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout CrasshhfyAudioProcessor::cre
                                                                      d.label));
 
     return { params.begin(), params.end() };
-}
-
-Drum CrasshhfyAudioProcessor::renderCRASHSample()
-{
-    juce::AudioBuffer<float> data{ UnetModelInference::numChannels, UnetModelInference::outputSize };
-    size_t classification = 0;
-    float confidence = 0;
-
-    unetModelInference.process(data.getWritePointer(0), 10);
-    classifierModelInference.process(data.getReadPointer(0), &classification, &confidence);
-    
-    // 0 = Kick, 1 = Hat, 2 = Snare
-    Drum output;
-    output.sample = new Sample{ std::move(data), UnetModelInference::sampleRate };
-    output.drumType = static_cast<DrumType>(classification);
-    output.confidence = confidence;
-
-    return output;
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

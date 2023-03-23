@@ -77,26 +77,15 @@ CrasshhfyAudioProcessorEditor::CrasshhfyAudioProcessorEditor(CrasshhfyAudioProce
 	addAndMakeVisible(_inpaintButton);
     addAndMakeVisible(_inpaintSelector);
 
-	// Save sample to file
-	_saveButton.setButtonText("Save Sample");
-	_saveButton.onClick = [this]
-	{
-        auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
-        auto defaultPath = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDesktopDirectory);
+	_stepsSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+	_stepsSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 30, 15);
+	_stepsSlider.setNormalisableRange({ 5.0, 15.0, 1.0 });
+	_stepsSlider.setValue(p.getNumSteps());
+	_stepsSlider.onValueChange = [&] { p.setNumSteps(_stepsSlider.getValue()); };
+	addAndMakeVisible(_stepsSlider);
 
-        _chooser = std::make_unique<juce::FileChooser>("Save wav file", defaultPath, "*.wav");
-        
-        _chooser->launchAsync(flags, [this](const juce::FileChooser& chooser) {
-            auto f = chooser.getResult();
-            
-            if (f == juce::File())
-                return;
-            
-            if (_lastNoteIndex >= 0)
-				_processor.saveSample(_lastNoteIndex, f);
-        });
-	};
-	addAndMakeVisible(_saveButton);
+	_stepsLabel.setText("Steps", juce::dontSendNotification);
+	addAndMakeVisible(_stepsLabel);
 
 	// On-screen keyboard
 	_keyboard.reset(new SampleKeyboard(p.baseMidiNote, p.numSounds, p.getMidiKeyboardState()));
@@ -166,6 +155,8 @@ void CrasshhfyAudioProcessorEditor::resized()
 	_drumifyButton.setBounds(generateBounds.translated(buttonSectionWidth, 0));
 	_inpaintButton.setBounds(generateBounds.translated(2 * buttonSectionWidth, 0));
     _inpaintSelector.setBounds(generateBounds.translated(2 * buttonSectionWidth, 40));
+	_stepsSlider.setBounds(generateBounds.translated(buttonSectionWidth, 40));
+	_stepsLabel.setBounds(_stepsSlider.getBounds().translated(-45, 0).withSize(45, 20));
 
 	_keyboard->setBounds(mid);
 

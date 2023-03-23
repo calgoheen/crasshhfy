@@ -128,19 +128,24 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int w,
                           				 float sliderPos, float, float,
                           				 const juce::Slider::SliderStyle style, juce::Slider&)
 {
-	if (style != juce::Slider::SliderStyle::LinearVertical)
-		return;
-
-	static constexpr float stroke = 2.0f;
+    static constexpr float stroke = 2.0f;
 	static constexpr float diameter = 8.0f;
 
 	auto pathColour = Palette::light2;
 	auto dotColour = Palette::light1;
 
-	auto bounds = juce::Rectangle<int>{ x, y, w, h }.toFloat();
-	auto startPoint = juce::Point<float>{ bounds.getCentreX(), bounds.getBottom() };
-	auto endPoint = juce::Point<float>{ bounds.getCentreX(), bounds.getY() };
-	auto currentValuePoint = juce::Point<float>{ float(bounds.getCentreX()), sliderPos };
+    auto bounds = juce::Rectangle<int>{ x, y, w, h }.toFloat();
+
+	bool isVertical = (style == juce::Slider::SliderStyle::LinearVertical);
+
+	auto startPoint = isVertical ? juce::Point<float>{ bounds.getCentreX(), bounds.getBottom() } 
+                                 : juce::Point<float>{ bounds.getX(), bounds.getCentreY() };
+
+	auto endPoint = isVertical ? juce::Point<float>{ bounds.getCentreX(), bounds.getY() }
+                               : juce::Point<float>{ bounds.getRight(), bounds.getCentreY() };
+
+	auto currentValuePoint = isVertical ? juce::Point<float>{ bounds.getCentreX(), sliderPos }
+                                        : juce::Point<float>{ sliderPos, bounds.getCentreY() };
 
 	g.setColour(pathColour);
 	g.drawLine({ startPoint, endPoint }, stroke);

@@ -33,6 +33,9 @@ public:
     void generateSample(int soundIndex);
     void drumifySample(int soundIndex, const juce::File& file);
     void inpaintSample(int soundIndex, const juce::File& file, bool half);
+    
+    void setNumSteps(int numSamplingSteps);
+    int getNumSteps() const;
 
     const juce::String getName() const override;
     bool acceptsMidi() const override;
@@ -46,7 +49,6 @@ public:
     void changeProgramName(int, const juce::String&) override;
 
 private:
-    Drum renderCRASHSample();
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     juce::AudioProcessorValueTreeState _parameters;
@@ -57,6 +59,7 @@ private:
 
     UnetModelInference unetModelInference;
     ClassifierModelInference classifierModelInference;
+    int _numSteps{ 10 };
 
     juce::MidiKeyboardState _midiState;
 

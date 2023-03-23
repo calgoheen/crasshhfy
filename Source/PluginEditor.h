@@ -27,9 +27,8 @@ private:
     juce::TextButton _inpaintButton;
     juce::Label _inpaintText;
     juce::ToggleButton _inpaintSelector;
-    
-	juce::TextButton _saveButton;
-	juce::TextButton _loadButton;
+    juce::Slider _stepsSlider;
+    juce::Label _stepsLabel;
 
 	std::unique_ptr<SampleKeyboard> _keyboard;
 	juce::OwnedArray<ParameterView> _parameterViews;
