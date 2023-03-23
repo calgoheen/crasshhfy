@@ -1,7 +1,7 @@
 # CRASSHHFY
 CRASSHHFY is a neural drum sampler plugin which uses a diffusion network to generate drum samples. Besides unconditional generation, the plugin also supports priming ("Drumify") and inpainting ("Variation"). Also, it has a classifier which can classify the drum samples into 3 categories: kick, snare, hihat.
 
- It is based on the paper [CRASH: A Diffusion Network for Drum Sound Synthesis](https://arxiv.org/abs/2006.12597) by Simon Rouard, Jérémie Mary, and Emmanuel Vincent and their original implementation [here](https://github.com/simonrouard/CRASH).
+ It is based on the paper [CRASH: A Diffusion Network for Drum Sound Synthesis](https://arxiv.org/abs/2006.12597) by Simon Rouard, Gaëtan Hadjeres and their original implementation [here](https://github.com/simonrouard/CRASH).
 
 We have also added a classifier to the plugin which can classify the drum samples into 3 categories: kick, snare and hihat.
 
@@ -56,7 +56,7 @@ source ./venv/bin/activate
 pip install -r requirements.txt
 pip install onnx
 ```
-Then copy the export.py script from this repo to that one. 
+Then copy the export.py script from this repo to that one.
 Then run
 `python export.py`
 
@@ -71,7 +71,7 @@ This will create `crash.onnx` and `classifier.onnx`
 2. Then copy `crash.onnx` and `classifier.onnx` to `ort-builder/onnx-models`
 
 
-3. 
+3.
 ```
 cd ort-builder
 git clone https://github.com/microsoft/onnxruntime.git
@@ -83,7 +83,7 @@ python -m onnxruntime.tools.convert_onnx_models_to_ort onnx-models --enable_type
 python -m bin2c -o ./model/crash.ort onnx_models/crash.ort
 python -m bin2c -o ./model/crash.ort onnx_models/classifier.ort
 ```
-4. Update the build script (in our case `./build-mac.sh`) such that 
+4. Update the build script (in our case `./build-mac.sh`) such that
 `model.required_operators_and_types.config` becomes `required_operators_and_types.config` (2 places)
 
 5. Run the build script (`./build-mac.sh`)
