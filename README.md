@@ -1,9 +1,9 @@
-# Crasshhfy
+# CRASSHHFY
 
 ## Clone the repo
 
 ```
-git clone https://github.com/calgoheen/Crasshhfy.git --recurse-submodules
+git clone https://github.com/calgoheen/crasshhfy.git --recurse-submodules
 ```
 
 ## Build the example model

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-set(PROJECT_NAME "Crasshhfy")
+set(PROJECT_NAME "CRASSHHFY")
 set(FORMATS Standalone AU VST3)
 file(STRINGS VERSION CURRENT_VERSION)
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
@@ -26,7 +26,7 @@ add_subdirectory(JUCE)
 
 juce_add_plugin(${PROJECT_NAME}
     COMPANY_NAME "CalGoheenMattRice"
-    BUNDLE_ID com.cgmr.Crasshhfy
+    BUNDLE_ID com.cgmr.crasshhfy
     IS_SYNTH TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE
