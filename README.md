@@ -56,7 +56,7 @@ source ./venv/bin/activate
 pip install -r requirements.txt
 pip install onnx
 ```
-Then copy the export.py script from this repo to that one.
+Then copy the `export.py` script from this repo to that one.
 Then run
 `python export.py`
 
