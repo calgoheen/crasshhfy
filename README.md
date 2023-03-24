@@ -90,5 +90,5 @@ python -m bin2c -o ./model/crash.ort onnx_models/classifier.ort
 6. Ensure output looks the same as in "Download the models"
 
 # Credits
-- Simon Rouard, Jérémie Mary, and Emmanuel Vincent for the paper and their original implementation
+- Simon Rouard and Gaëtan Hadjeres for the paper and their original implementation
 - [Oli Larkin](https://github.com/olilarkin/ort-builder) for his ort-builder repo, tutorial, and examples
