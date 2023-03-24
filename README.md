@@ -1,5 +1,5 @@
 # CRASSHHFY
-CRASSHHFY is a neural drum sampler plugin which uses a diffusion network to generate drum samples. Besides unconditional generation, the plugin also supports priming ("Drumify") and inpainting ("Variation"). Also, it has a classifier which can classify the drum samples into 3 categories: kick, snare, hihat.
+CRASSHHFY is a neural drum sampler plugin that uses a diffusion network to generate drum samples. Besides unconditional generation, the plugin also supports priming ("Drumify") and inpainting ("Variation"). Also, it has a classifier that can classify the drum samples into 3 categories: kick, snare, and hihat.
 
  It is based on the paper [CRASH: A Diffusion Network for Drum Sound Synthesis](https://arxiv.org/pdf/2106.07431.pdf) by Simon Rouard and Gaëtan Hadjeres and their original implementation [here](https://github.com/simonrouard/CRASH).
 
