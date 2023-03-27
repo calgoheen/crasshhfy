@@ -92,3 +92,4 @@ python -m bin2c -o ./model/crash.ort onnx_models/classifier.ort
 # Credits
 - Simon Rouard and Gaëtan Hadjeres for the paper and their original implementation
 - [Oli Larkin](https://github.com/olilarkin/ort-builder) for his ort-builder repo, tutorial, and examples
+- [Sample rate converter](https://github.com/avaneev/r8brain-free-src) designed by Aleksey Vaneev of Voxengo
